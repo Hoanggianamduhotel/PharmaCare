@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,6 +50,16 @@ export function AddMedicineDialog({
   const [selectedExistingMedicine, setSelectedExistingMedicine] = useState<Medicine | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Refs for keyboard navigation
+  const tenThuocRef = useRef<HTMLInputElement>(null);
+  const donViRef = useRef<HTMLInputElement>(null);
+  const soLuongTonRef = useRef<HTMLInputElement>(null);
+  const soLuongDatHangRef = useRef<HTMLInputElement>(null);
+  const giaNhapRef = useRef<HTMLInputElement>(null);
+  const giaBanRef = useRef<HTMLInputElement>(null);
+  const duongDungRef = useRef<HTMLInputElement>(null);
+  const saveButtonRef = useRef<HTMLButtonElement>(null);
 
   const form = useForm<z.infer<typeof medicineSchema>>({
     resolver: zodResolver(medicineSchema),
@@ -151,6 +161,19 @@ export function AddMedicineDialog({
     setSelectedExistingMedicine(null);
   };
 
+  // Handle Enter key navigation
+  const handleKeyDown = (e: React.KeyboardEvent, nextRef?: React.RefObject<HTMLInputElement | HTMLButtonElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (nextRef?.current) {
+        nextRef.current.focus();
+      } else {
+        // If no next ref, submit form
+        form.handleSubmit(onSubmit)();
+      }
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -174,7 +197,13 @@ export function AddMedicineDialog({
                     <FormItem>
                       <FormLabel>Tên thuốc *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nhập tên thuốc" {...field} />
+                        <Input 
+                          placeholder="Nhập tên thuốc" 
+                          {...field}
+                          ref={tenThuocRef}
+                          onKeyDown={(e) => handleKeyDown(e, donViRef)}
+                          autoFocus
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -210,6 +239,8 @@ export function AddMedicineDialog({
                       <Input
                         placeholder="Viên, ml, gói..."
                         {...field}
+                        ref={donViRef}
+                        onKeyDown={(e) => handleKeyDown(e, soLuongTonRef)}
                         disabled={tab === "existing" && !!selectedExistingMedicine}
                       />
                     </FormControl>
@@ -232,6 +263,8 @@ export function AddMedicineDialog({
                           type="number"
                           placeholder="0"
                           {...field}
+                          ref={soLuongTonRef}
+                          onKeyDown={(e) => handleKeyDown(e, soLuongDatHangRef)}
                           onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
@@ -251,6 +284,8 @@ export function AddMedicineDialog({
                           type="number"
                           placeholder="0"
                           {...field}
+                          ref={soLuongDatHangRef}
+                          onKeyDown={(e) => handleKeyDown(e, giaNhapRef)}
                           onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
@@ -272,6 +307,8 @@ export function AddMedicineDialog({
                           type="number"
                           placeholder="0"
                           {...field}
+                          ref={giaNhapRef}
+                          onKeyDown={(e) => handleKeyDown(e, giaBanRef)}
                           onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
@@ -291,6 +328,8 @@ export function AddMedicineDialog({
                           type="number"
                           placeholder="0"
                           {...field}
+                          ref={giaBanRef}
+                          onKeyDown={(e) => handleKeyDown(e, duongDungRef)}
                           onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
@@ -310,6 +349,8 @@ export function AddMedicineDialog({
                       <Input
                         placeholder="Uống, tiêm, bôi ngoài da..."
                         {...field}
+                        ref={duongDungRef}
+                        onKeyDown={(e) => handleKeyDown(e, saveButtonRef)}
                         disabled={tab === "existing" && !!selectedExistingMedicine}
                       />
                     </FormControl>
@@ -329,6 +370,7 @@ export function AddMedicineDialog({
                 </Button>
                 <Button
                   type="submit"
+                  ref={saveButtonRef}
                   disabled={createMutation.isPending || updateMutation.isPending}
                 >
                   {createMutation.isPending || updateMutation.isPending ? "Đang lưu..." : "Lưu thuốc"}

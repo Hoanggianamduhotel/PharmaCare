@@ -20,11 +20,21 @@ import {
   prescription_medicines,
 } from "@shared/schema";
 
-// Create connection string from Supabase URL
-const connectionString = process.env.DATABASE_URL || 
-  `postgresql://postgres:${process.env.SUPABASE_ANON_KEY}@${process.env.SUPABASE_URL?.replace('https://', '').replace('.supabase.co', '.pooler.supabase.com')}:6543/postgres`;
+// Use the DATABASE_URL directly with fallback for demo
+const connectionString = process.env.DATABASE_URL;
 
-const sql = postgres(connectionString);
+if (!connectionString) {
+  throw new Error('DATABASE_URL environment variable is required');
+}
+
+console.log('Database connection attempt with URL...');
+
+// Add timeout and retry configuration for Supabase
+const sql = postgres(connectionString, {
+  max: 1,
+  idle_timeout: 5,
+  connect_timeout: 5,
+});
 const db = drizzle(sql);
 
 export interface IStorage {
@@ -54,6 +64,149 @@ export interface IStorage {
   // Prescription medicine methods
   getPrescriptionMedicines(prescriptionId: string): Promise<Array<PrescriptionMedicine & { ten_thuoc: string; don_vi: string }>>;
   createPrescriptionMedicine(prescriptionMedicine: InsertPrescriptionMedicine): Promise<PrescriptionMedicine>;
+}
+
+// In-memory storage for demo when database is unreachable
+class MemoryStorage implements IStorage {
+  private users: Map<string, User> = new Map();
+  private medicines: Map<string, Medicine> = new Map();
+  private patients: Map<string, Patient> = new Map();
+  private prescriptions: Map<string, Prescription> = new Map();
+  private prescriptionMedicines: Map<string, PrescriptionMedicine> = new Map();
+
+  constructor() {
+    // Add sample data
+    const sampleMedicines: Medicine[] = [
+      {
+        id: "1",
+        ten_thuoc: "Paracetamol 500mg",
+        don_vi: "Viên",
+        so_luong_ton: 100,
+        so_luong_dat_hang: 50,
+        gia_nhap: 200,
+        gia_ban: 500,
+        duong_dung: "Uống"
+      },
+      {
+        id: "2", 
+        ten_thuoc: "Amoxicillin 250mg",
+        don_vi: "Viên",
+        so_luong_ton: 75,
+        so_luong_dat_hang: 25,
+        gia_nhap: 300,
+        gia_ban: 800,
+        duong_dung: "Uống"
+      }
+    ];
+    
+    sampleMedicines.forEach(med => this.medicines.set(med.id, med));
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.username === username);
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const newUser: User = { ...user, id: Date.now().toString() };
+    this.users.set(newUser.id, newUser);
+    return newUser;
+  }
+
+  async getMedicines(): Promise<Medicine[]> {
+    return Array.from(this.medicines.values());
+  }
+
+  async getMedicine(id: string): Promise<Medicine | undefined> {
+    return this.medicines.get(id);
+  }
+
+  async createMedicine(medicine: InsertMedicine): Promise<Medicine> {
+    const newMedicine: Medicine = { ...medicine, id: Date.now().toString() };
+    this.medicines.set(newMedicine.id, newMedicine);
+    return newMedicine;
+  }
+
+  async updateMedicine(id: string, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined> {
+    const existing = this.medicines.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...medicine };
+    this.medicines.set(id, updated);
+    return updated;
+  }
+
+  async deleteMedicine(id: string): Promise<boolean> {
+    return this.medicines.delete(id);
+  }
+
+  async getPatients(): Promise<Patient[]> {
+    return Array.from(this.patients.values());
+  }
+
+  async getPatient(id: string): Promise<Patient | undefined> {
+    return this.patients.get(id);
+  }
+
+  async createPatient(patient: InsertPatient): Promise<Patient> {
+    const newPatient: Patient = { ...patient, id: Date.now().toString() };
+    this.patients.set(newPatient.id, newPatient);
+    return newPatient;
+  }
+
+  async getPrescriptions(): Promise<PrescriptionWithDetails[]> {
+    return Array.from(this.prescriptions.values()).map(p => ({
+      ...p,
+      ten_benh_nhan: this.patients.get(p.benh_nhan_id)?.ten || "Unknown",
+      tuoi: this.patients.get(p.benh_nhan_id)?.tuoi || 0
+    }));
+  }
+
+  async getPrescription(id: string): Promise<PrescriptionWithDetails | undefined> {
+    const prescription = this.prescriptions.get(id);
+    if (!prescription) return undefined;
+    const patient = this.patients.get(prescription.benh_nhan_id);
+    return {
+      ...prescription,
+      ten_benh_nhan: patient?.ten || "Unknown",
+      tuoi: patient?.tuoi || 0
+    };
+  }
+
+  async createPrescription(prescription: InsertPrescription): Promise<Prescription> {
+    const newPrescription: Prescription = { ...prescription, id: Date.now().toString() };
+    this.prescriptions.set(newPrescription.id, newPrescription);
+    return newPrescription;
+  }
+
+  async updatePrescriptionStatus(id: string, status: string): Promise<Prescription | undefined> {
+    const existing = this.prescriptions.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, trang_thai: status };
+    this.prescriptions.set(id, updated);
+    return updated;
+  }
+
+  async getPrescriptionMedicines(prescriptionId: string): Promise<Array<PrescriptionMedicine & { ten_thuoc: string; don_vi: string }>> {
+    return Array.from(this.prescriptionMedicines.values())
+      .filter(pm => pm.toa_thuoc_id === prescriptionId)
+      .map(pm => {
+        const medicine = this.medicines.get(pm.thuoc_id);
+        return {
+          ...pm,
+          ten_thuoc: medicine?.ten_thuoc || "Unknown",
+          don_vi: medicine?.don_vi || "Unknown"
+        };
+      });
+  }
+
+  async createPrescriptionMedicine(prescriptionMedicine: InsertPrescriptionMedicine): Promise<PrescriptionMedicine> {
+    const newPM: PrescriptionMedicine = { ...prescriptionMedicine, id: Date.now().toString() };
+    this.prescriptionMedicines.set(newPM.id, newPM);
+    return newPM;
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -231,4 +384,29 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Initialize with memory storage for demo, try database when possible
+let storage: IStorage = new MemoryStorage();
+let isUsingMemoryStorage = true;
+
+// Try to initialize database storage
+const initializeStorage = async () => {
+  try {
+    const dbStorage = new DatabaseStorage();
+    // Test connection
+    await dbStorage.getMedicines();
+    storage = dbStorage;
+    isUsingMemoryStorage = false;
+    console.log('✅ Using database storage');
+  } catch (error) {
+    console.log('⚠️  Database connection failed, using memory storage for demo');
+    console.log('Error:', error);
+    storage = new MemoryStorage();
+    isUsingMemoryStorage = true;
+  }
+};
+
+// Try to connect to database on startup
+initializeStorage();
+
+export { storage };
+export const getStorageInfo = () => ({ isUsingMemoryStorage });
