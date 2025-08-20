@@ -138,18 +138,9 @@ export type PrescriptionWithDetails = Prescription & {
   medicines: (PrescriptionMedicine & { ten_thuoc: string; don_vi: string })[];
 };
 
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type Medicine = typeof medicines.$inferSelect;
-export type InsertMedicine = z.infer<typeof insertMedicineSchema>;
-export type Patient = typeof patients.$inferSelect;
-export type InsertPatient = z.infer<typeof insertPatientSchema>;
-export type Prescription = typeof prescriptions.$inferSelect;
-export type InsertPrescription = z.infer<typeof insertPrescriptionSchema>;
-export type PrescriptionMedicine = typeof prescription_medicines.$inferSelect;
-export type InsertPrescriptionMedicine = z.infer<typeof insertPrescriptionMedicineSchema>;
-
-export interface PrescriptionWithDetails extends Prescription {
-  ten_benhnhan: string;
-  medicines: Array<PrescriptionMedicine & { ten_thuoc: string; don_vi: string }>;
-}
+// Export inferred types using z.infer for consistent validation
+export type InsertUserInferred = z.infer<typeof insertUserSchema>;
+export type InsertMedicineInferred = z.infer<typeof insertMedicineSchema>;
+export type InsertPatientInferred = z.infer<typeof insertPatientSchema>;
+export type InsertPrescriptionInferred = z.infer<typeof insertPrescriptionSchema>;
+export type InsertPrescriptionMedicineInferred = z.infer<typeof insertPrescriptionMedicineSchema>;

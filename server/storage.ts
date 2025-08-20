@@ -8,6 +8,8 @@ import {
   type InsertKhambenh,
   type User,
   type InsertUser,
+  type Medicine,
+  type InsertMedicine,
 } from "@shared/schema";
 
 console.log('Initializing Supabase storage...');
@@ -23,6 +25,12 @@ export interface IStorage {
   getThuocById(id: string): Promise<Thuoc | undefined>;
   searchThuocByName(searchTerm: string): Promise<Thuoc[]>;
   updateThuocStock(id: string, newStock: number): Promise<void>;
+
+  // Legacy Medicine API support
+  getMedicine(id: string): Promise<Medicine | undefined>;
+  createMedicine(medicine: InsertMedicine): Promise<Medicine>;
+  updateMedicine(id: string, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined>;
+  deleteMedicine(id: string): Promise<boolean>;
 
   // Khám bệnh
   getKhambenhById(id: string): Promise<Khambenh | undefined>;
@@ -83,7 +91,14 @@ export class MemStorage implements IStorage {
       ghi_chu: "Bệnh nhân cần nghỉ ngơi",
     };
     const kbId = `kb-${this.currentId++}`;
-    this.khambenhList.set(kbId, { id: kbId, ...sampleKhambenh });
+    this.khambenhList.set(kbId, { 
+      id: kbId, 
+      benh_nhan_id: sampleKhambenh.benh_nhan_id,
+      bac_si_id: sampleKhambenh.bac_si_id,
+      ngay_kham: sampleKhambenh.ngay_kham,
+      chan_doan: sampleKhambenh.chan_doan,
+      ghi_chu: sampleKhambenh.ghi_chu || null,
+    });
   }
 
   // User
@@ -138,7 +153,14 @@ export class MemStorage implements IStorage {
   }
   async createKhambenh(k: InsertKhambenh) {
     const id = `kb-${this.currentId++}`;
-    const newK: Khambenh = { id, ...k };
+    const newK: Khambenh = { 
+      id, 
+      benh_nhan_id: k.benh_nhan_id,
+      bac_si_id: k.bac_si_id,
+      ngay_kham: k.ngay_kham,
+      chan_doan: k.chan_doan,
+      ghi_chu: k.ghi_chu || null,
+    };
     this.khambenhList.set(id, newK);
     return newK;
   }
@@ -148,7 +170,13 @@ export class MemStorage implements IStorage {
     const out: Toathuoc[] = [];
     for (const d of data) {
       const id = `tt-${this.currentId++}`;
-      const obj: Toathuoc = { id, ...d };
+      const obj: Toathuoc = { 
+        id, 
+        khambenh_id: d.khambenh_id,
+        thuoc_id: d.thuoc_id,
+        so_luong: d.so_luong,
+        cach_dung: d.cach_dung || null,
+      };
       this.toathuocList.set(id, obj);
       out.push(obj);
     }
@@ -158,6 +186,75 @@ export class MemStorage implements IStorage {
     return Array.from(this.toathuocList.values()).filter(
       (t) => t.khambenh_id === khambenhId
     );
+  }
+
+  // Legacy Medicine API methods - convert from Thuoc to Medicine format
+  async getMedicine(id: string): Promise<Medicine | undefined> {
+    const thuoc = this.thuocList.get(id);
+    if (!thuoc) return undefined;
+    
+    return {
+      id: thuoc.id,
+      ten_thuoc: thuoc.ten_thuoc,
+      don_vi: thuoc.don_vi,
+      so_luong_ton: thuoc.so_luong_ton,
+      gia_nhap: 0,
+      gia_ban: 0,
+      so_luong_dat_hang: 0,
+      duong_dung: "Uống",
+      created_at: new Date()
+    };
+  }
+
+  async createMedicine(medicine: InsertMedicine): Promise<Medicine> {
+    const id = `thuoc-${this.currentId++}`;
+    const thuoc: Thuoc = {
+      id,
+      ten_thuoc: medicine.ten_thuoc,
+      don_vi: medicine.don_vi,
+      so_luong_ton: medicine.so_luong_ton || 0
+    };
+    this.thuocList.set(id, thuoc);
+    
+    return {
+      id,
+      ten_thuoc: medicine.ten_thuoc,
+      don_vi: medicine.don_vi,
+      so_luong_ton: medicine.so_luong_ton || 0,
+      gia_nhap: medicine.gia_nhap || 0,
+      gia_ban: medicine.gia_ban || 0,
+      so_luong_dat_hang: medicine.so_luong_dat_hang || 0,
+      duong_dung: medicine.duong_dung || "Uống",
+      created_at: new Date()
+    };
+  }
+
+  async updateMedicine(id: string, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined> {
+    const existing = this.thuocList.get(id);
+    if (!existing) return undefined;
+
+    const updated = { ...existing };
+    if (medicine.ten_thuoc) updated.ten_thuoc = medicine.ten_thuoc;
+    if (medicine.don_vi) updated.don_vi = medicine.don_vi;
+    if (medicine.so_luong_ton !== undefined) updated.so_luong_ton = medicine.so_luong_ton;
+    
+    this.thuocList.set(id, updated);
+    
+    return {
+      id: updated.id,
+      ten_thuoc: updated.ten_thuoc,
+      don_vi: updated.don_vi,
+      so_luong_ton: updated.so_luong_ton,
+      gia_nhap: medicine.gia_nhap || 0,
+      gia_ban: medicine.gia_ban || 0,
+      so_luong_dat_hang: medicine.so_luong_dat_hang || 0,
+      duong_dung: medicine.duong_dung || "Uống",
+      created_at: new Date()
+    };
+  }
+
+  async deleteMedicine(id: string): Promise<boolean> {
+    return this.thuocList.delete(id);
   }
 }
 
@@ -237,6 +334,29 @@ export class SupabaseStorage implements IStorage {
       .eq('khambenh_id', khambenhId);
     if (error) throw error;
     return data || [];
+  }
+
+  // Legacy Medicine API methods - work with medicines table
+  async getMedicine(id: string): Promise<Medicine | undefined> {
+    const { data } = await supabase.from('medicines').select('*').eq('id', id).single();
+    return data || undefined;
+  }
+
+  async createMedicine(medicine: InsertMedicine): Promise<Medicine> {
+    const { data, error } = await supabase.from('medicines').insert(medicine).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  async updateMedicine(id: string, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined> {
+    const { data, error } = await supabase.from('medicines').update(medicine).eq('id', id).select().single();
+    if (error) throw error;
+    return data || undefined;
+  }
+
+  async deleteMedicine(id: string): Promise<boolean> {
+    const { error } = await supabase.from('medicines').delete().eq('id', id);
+    return !error;
   }
 }
 
