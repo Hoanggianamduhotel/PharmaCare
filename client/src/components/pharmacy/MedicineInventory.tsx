@@ -123,7 +123,7 @@ export function MedicineInventory({
           Danh sách thuốc trong kho
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <DataTable
           data={medicines}
           columns={columns}
