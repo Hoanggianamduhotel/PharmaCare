@@ -336,26 +336,80 @@ export class SupabaseStorage implements IStorage {
     return data || [];
   }
 
-  // Legacy Medicine API methods - work with medicines table
+  // Legacy Medicine API methods - work with thuoc table and map to Medicine format
   async getMedicine(id: string): Promise<Medicine | undefined> {
-    const { data } = await supabase.from('medicines').select('*').eq('id', id).single();
-    return data || undefined;
+    const { data } = await supabase.from('thuoc').select('*').eq('id', id).single();
+    if (!data) return undefined;
+    
+    return {
+      id: data.id,
+      ten_thuoc: data.ten_thuoc,
+      don_vi: data.don_vi || "",
+      so_luong_ton: data.so_luong_ton || 0,
+      gia_nhap: data.gia_nhap || 0,
+      gia_ban: data.gia_ban || 0,
+      so_luong_dat_hang: data.so_luong_dat_hang || 0,
+      duong_dung: data.duong_dung || "Uống",
+      created_at: data.created_at || new Date()
+    };
   }
 
   async createMedicine(medicine: InsertMedicine): Promise<Medicine> {
-    const { data, error } = await supabase.from('medicines').insert(medicine).select().single();
+    const thuocData = {
+      ten_thuoc: medicine.ten_thuoc,
+      don_vi: medicine.don_vi,
+      so_luong_ton: medicine.so_luong_ton,
+      gia_nhap: medicine.gia_nhap,
+      gia_ban: medicine.gia_ban,
+      so_luong_dat_hang: medicine.so_luong_dat_hang,
+      duong_dung: medicine.duong_dung
+    };
+    
+    const { data, error } = await supabase.from('thuoc').insert(thuocData).select().single();
     if (error) throw error;
-    return data;
+    
+    return {
+      id: data.id,
+      ten_thuoc: data.ten_thuoc,
+      don_vi: data.don_vi || "",
+      so_luong_ton: data.so_luong_ton || 0,
+      gia_nhap: data.gia_nhap || 0,
+      gia_ban: data.gia_ban || 0,
+      so_luong_dat_hang: data.so_luong_dat_hang || 0,
+      duong_dung: data.duong_dung || "Uống",
+      created_at: data.created_at || new Date()
+    };
   }
 
   async updateMedicine(id: string, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined> {
-    const { data, error } = await supabase.from('medicines').update(medicine).eq('id', id).select().single();
+    const updateData: any = {};
+    if (medicine.ten_thuoc) updateData.ten_thuoc = medicine.ten_thuoc;
+    if (medicine.don_vi) updateData.don_vi = medicine.don_vi;
+    if (medicine.so_luong_ton !== undefined) updateData.so_luong_ton = medicine.so_luong_ton;
+    if (medicine.gia_nhap !== undefined) updateData.gia_nhap = medicine.gia_nhap;
+    if (medicine.gia_ban !== undefined) updateData.gia_ban = medicine.gia_ban;
+    if (medicine.so_luong_dat_hang !== undefined) updateData.so_luong_dat_hang = medicine.so_luong_dat_hang;
+    if (medicine.duong_dung) updateData.duong_dung = medicine.duong_dung;
+    
+    const { data, error } = await supabase.from('thuoc').update(updateData).eq('id', id).select().single();
     if (error) throw error;
-    return data || undefined;
+    if (!data) return undefined;
+    
+    return {
+      id: data.id,
+      ten_thuoc: data.ten_thuoc,
+      don_vi: data.don_vi || "",
+      so_luong_ton: data.so_luong_ton || 0,
+      gia_nhap: data.gia_nhap || 0,
+      gia_ban: data.gia_ban || 0,
+      so_luong_dat_hang: data.so_luong_dat_hang || 0,
+      duong_dung: data.duong_dung || "Uống",
+      created_at: data.created_at || new Date()
+    };
   }
 
   async deleteMedicine(id: string): Promise<boolean> {
-    const { error } = await supabase.from('medicines').delete().eq('id', id);
+    const { error } = await supabase.from('thuoc').delete().eq('id', id);
     return !error;
   }
 }

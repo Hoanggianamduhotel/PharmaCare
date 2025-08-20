@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -77,8 +77,14 @@ export const insertPrescriptionMedicineSchema = createInsertSchema(prescription_
 export const thuoc = pgTable("thuoc", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ten_thuoc: text("ten_thuoc").notNull(),
-  don_vi: text("don_vi").notNull(),
-  so_luong_ton: integer("so_luong_ton").notNull().default(0),
+  don_vi: text("don_vi"),
+  so_luong_ton: numeric("so_luong_ton"),
+  gia_ban: numeric("gia_ban"),
+  created_at: timestamp("created_at").defaultNow(),
+  gia_nhap: numeric("gia_nhap", { precision: 10, scale: 2 }),
+  so_luong_dat_hang: integer("so_luong_dat_hang").default(0),
+  duong_dung: text("duong_dung"),
+  phan_loai: text("phan_loai"),
 });
 
 export const khambenh = pgTable("khambenh", {

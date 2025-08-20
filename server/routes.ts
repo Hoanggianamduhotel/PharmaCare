@@ -89,38 +89,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/medicines", async (req, res) => {
-    console.log("=== POST /api/medicines DEBUG ===");
-    console.log("Body received:", JSON.stringify(req.body, null, 2));
-    console.log("Storage type:", isUsingMemoryStorage ? "Memory" : "Supabase");
-    
     try {
-      // First test parsing
-      console.log("Attempting to parse with schema...");
       const medicineData = insertMedicineSchema.parse(req.body);
-      console.log("Parsed successfully:", JSON.stringify(medicineData, null, 2));
-      
-      // Then test storage
-      console.log("Attempting to create medicine...");
       const medicine = await storage.createMedicine(medicineData);
-      console.log("Medicine created successfully:", JSON.stringify(medicine, null, 2));
-      
       res.status(201).json(medicine);
     } catch (error) {
-      console.error("=== ERROR DETAILS ===");
-      console.error("Error type:", error.constructor.name);
-      console.error("Error message:", (error as Error).message);
-      console.error("Full error:", error);
-      
       if (error instanceof z.ZodError) {
-        console.error("Zod validation errors:", JSON.stringify(error.errors, null, 2));
         return res.status(400).json({ message: "Dữ liệu không hợp lệ", errors: error.errors });
       }
-      
-      res.status(500).json({ 
-        message: "Lỗi khi thêm thuốc", 
-        error: (error as Error).message,
-        storageType: isUsingMemoryStorage ? "Memory" : "Supabase"
-      });
+      console.error("Error creating medicine:", error);
+      res.status(500).json({ message: "Lỗi khi thêm thuốc" });
     }
   });
 
