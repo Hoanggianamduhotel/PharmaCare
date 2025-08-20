@@ -54,21 +54,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Legacy Medicine routes for compatibility
+  // Legacy Medicine routes for compatibility - now using thuoc table data
   app.get("/api/medicines", async (req, res) => {
     try {
       const thuoc = await storage.getAllThuoc();
-      // Map to legacy format
+      // Map thuoc to medicine format with actual data from thuoc table
       const medicines = thuoc.map(t => ({
         id: t.id,
         ten_thuoc: t.ten_thuoc,
-        don_vi: t.don_vi,
-        so_luong_ton: t.so_luong_ton,
-        so_luong_dat_hang: 0,
-        gia_nhap: 0,
-        gia_ban: 0,
-        duong_dung: "Uống",
-        created_at: new Date()
+        don_vi: t.don_vi || "",
+        so_luong_ton: parseInt(t.so_luong_ton?.toString() || "0"),
+        so_luong_dat_hang: parseInt(t.so_luong_dat_hang?.toString() || "0"),
+        gia_nhap: parseInt(t.gia_nhap?.toString() || "0"),
+        gia_ban: parseInt(t.gia_ban?.toString() || "0"),
+        duong_dung: t.duong_dung || "Uống",
+        created_at: t.created_at || new Date()
       }));
       res.json(medicines);
     } catch (error) {
