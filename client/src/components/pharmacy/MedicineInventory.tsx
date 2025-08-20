@@ -31,7 +31,7 @@ export function MedicineInventory({
       render: (value: string, item: Medicine) => (
         <div className="flex items-center">
           {getMedicineIcon(value)}
-          <span className="ml-2 font-medium">{value}</span>
+          <span className="ml-2 font-medium text-gray-700">{value}</span>
           {item.so_luong_ton <= item.so_luong_dat_hang && (
             <Badge variant="destructive" className="ml-2 text-xs">
               Sắp hết
@@ -49,7 +49,8 @@ export function MedicineInventory({
       label: "Tồn kho",
       render: (value: number, item: Medicine) => (
         <Badge
-          variant={item.so_luong_ton <= item.so_luong_dat_hang ? "destructive" : "secondary"}
+          variant={item.so_luong_ton <= item.so_luong_dat_hang ? "destructive" : "outline"}
+          className={item.so_luong_ton <= item.so_luong_dat_hang ? "" : "bg-gray-100 text-gray-600 border-gray-300"}
         >
           {value}
         </Badge>
@@ -66,7 +67,7 @@ export function MedicineInventory({
       key: "gia_ban" as keyof Medicine,
       label: "Giá bán",
       render: (value: number) => (
-        <span className="font-medium">{value.toLocaleString()} VNĐ</span>
+        <span className="font-medium text-gray-600">{value.toLocaleString()} VNĐ</span>
       ),
       className: "text-right",
     },
