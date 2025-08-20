@@ -87,15 +87,15 @@ export class MemStorage implements IStorage {
   }
 
   // User
-  async getUser(id: number) {
+  async getUser(id: string) {
     return this.users.get(id);
   }
   async getUserByUsername(username: string) {
     return Array.from(this.users.values()).find((u) => u.username === username);
   }
   async createUser(user: InsertUser) {
-    const id = this.currentUserId++;
-    const newUser: User = { id: id.toString(), ...user };
+    const id = `user-${this.currentUserId++}`;
+    const newUser: User = { id, ...user };
     this.users.set(id, newUser);
     return newUser;
   }
@@ -164,7 +164,7 @@ export class MemStorage implements IStorage {
 // Supabase storage implementation
 export class SupabaseStorage implements IStorage {
   // User
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const { data } = await supabase.from('users').select('*').eq('id', id).single();
     return data || undefined;
   }

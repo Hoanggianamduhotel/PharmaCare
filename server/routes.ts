@@ -1,14 +1,75 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMedicineSchema, insertPrescriptionSchema, insertPatientSchema } from "@shared/schema";
+import { 
+  insertMedicineSchema, 
+  insertPrescriptionSchema, 
+  insertPatientSchema,
+  insertThuocSchema,
+  insertKhambenhSchema,
+  insertToathuocSchema
+} from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Medicine routes
+  // Thuoc (Vietnamese) routes  
+  app.get("/api/thuoc", async (req, res) => {
+    try {
+      const thuoc = await storage.getAllThuoc();
+      res.json(thuoc);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi lấy danh sách thuốc" });
+    }
+  });
+
+  app.get("/api/thuoc/search", async (req, res) => {
+    try {
+      const { q = "" } = req.query;
+      const thuoc = await storage.searchThuocByName(q as string);
+      res.json(thuoc);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi tìm kiếm thuốc" });
+    }
+  });
+
+  app.get("/api/thuoc/:id", async (req, res) => {
+    try {
+      const thuoc = await storage.getThuocById(req.params.id);
+      if (!thuoc) {
+        return res.status(404).json({ message: "Không tìm thấy thuốc" });
+      }
+      res.json(thuoc);
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi lấy thông tin thuốc" });
+    }
+  });
+
+  app.patch("/api/thuoc/:id/stock", async (req, res) => {
+    try {
+      const { so_luong_ton } = req.body;
+      await storage.updateThuocStock(req.params.id, so_luong_ton);
+      res.json({ message: "Cập nhật tồn kho thành công" });
+    } catch (error) {
+      res.status(500).json({ message: "Lỗi khi cập nhật tồn kho" });
+    }
+  });
+
+  // Legacy Medicine routes for compatibility
   app.get("/api/medicines", async (req, res) => {
     try {
-      const medicines = await storage.getMedicines();
+      const thuoc = await storage.getAllThuoc();
+      // Map to legacy format
+      const medicines = thuoc.map(t => ({
+        id: t.id,
+        ten_thuoc: t.ten_thuoc,
+        don_vi: t.don_vi,
+        so_luong_ton: t.so_luong_ton,
+        so_luong_dat_hang: 0,
+        gia_nhap: 0,
+        gia_ban: 0,
+        duong_dung: "Uống",
+        created_at: new Date()
+      }));
       res.json(medicines);
     } catch (error) {
       res.status(500).json({ message: "Lỗi khi lấy danh sách thuốc" });
@@ -68,78 +129,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Prescription routes
+  // Prescription routes (simplified placeholder)
   app.get("/api/prescriptions", async (req, res) => {
     try {
-      const prescriptions = await storage.getPrescriptions();
-      res.json(prescriptions);
+      res.json([]); // Return empty array for now
     } catch (error) {
       res.status(500).json({ message: "Lỗi khi lấy danh sách toa thuốc" });
     }
   });
 
-  app.get("/api/prescriptions/:id", async (req, res) => {
-    try {
-      const prescription = await storage.getPrescription(req.params.id);
-      if (!prescription) {
-        return res.status(404).json({ message: "Không tìm thấy toa thuốc" });
-      }
-      res.json(prescription);
-    } catch (error) {
-      res.status(500).json({ message: "Lỗi khi lấy thông tin toa thuốc" });
-    }
-  });
-
-  app.patch("/api/prescriptions/:id/status", async (req, res) => {
-    try {
-      const { status } = req.body;
-      if (!status || typeof status !== "string") {
-        return res.status(400).json({ message: "Trạng thái không hợp lệ" });
-      }
-      
-      const prescription = await storage.updatePrescriptionStatus(req.params.id, status);
-      if (!prescription) {
-        return res.status(404).json({ message: "Không tìm thấy toa thuốc" });
-      }
-      res.json(prescription);
-    } catch (error) {
-      res.status(500).json({ message: "Lỗi khi cập nhật trạng thái toa thuốc" });
-    }
-  });
-
-  // Patient routes
+  // Patient routes (simplified placeholder)
   app.get("/api/patients", async (req, res) => {
     try {
-      const patients = await storage.getPatients();
-      res.json(patients);
+      res.json([]); // Return empty array for now
     } catch (error) {
       res.status(500).json({ message: "Lỗi khi lấy danh sách bệnh nhân" });
-    }
-  });
-
-  app.post("/api/patients", async (req, res) => {
-    try {
-      const patientData = insertPatientSchema.parse(req.body);
-      const patient = await storage.createPatient(patientData);
-      res.status(201).json(patient);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Dữ liệu không hợp lệ", errors: error.errors });
-      }
-      res.status(500).json({ message: "Lỗi khi thêm bệnh nhân" });
     }
   });
 
   // Statistics route
   app.get("/api/statistics", async (req, res) => {
     try {
-      const medicines = await storage.getMedicines();
-      const prescriptions = await storage.getPrescriptions();
+      const thuoc = await storage.getAllThuoc();
       
-      const totalMedicines = medicines.length;
-      const lowStockMedicines = medicines.filter(m => m.so_luong_ton <= m.so_luong_dat_hang).length;
-      const pendingPrescriptions = prescriptions.filter(p => p.trang_thai === "Chờ").length;
-      const totalValue = medicines.reduce((sum, m) => sum + (m.so_luong_ton * m.gia_ban), 0);
+      const totalMedicines = thuoc.length;
+      const lowStockMedicines = thuoc.filter(t => t.so_luong_ton <= 10).length;
+      const pendingPrescriptions = 0; // No prescriptions in simplified schema yet
+      const totalValue = 0; // No pricing in simplified schema yet
       
       res.json({
         totalMedicines,
