@@ -73,6 +73,71 @@ export const insertPrescriptionMedicineSchema = createInsertSchema(prescription_
   created_at: true,
 });
 
+// Additional tables for Vietnamese pharmacy schema
+export const thuoc = pgTable("thuoc", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ten_thuoc: text("ten_thuoc").notNull(),
+  don_vi: text("don_vi").notNull(),
+  so_luong_ton: integer("so_luong_ton").notNull().default(0),
+});
+
+export const khambenh = pgTable("khambenh", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  benh_nhan_id: text("benh_nhan_id").notNull(),
+  bac_si_id: text("bac_si_id").notNull(),
+  ngay_kham: text("ngay_kham").notNull(),
+  chan_doan: text("chan_doan").notNull(),
+  ghi_chu: text("ghi_chu"),
+});
+
+export const toathuoc = pgTable("toathuoc", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  khambenh_id: text("khambenh_id").notNull(),
+  thuoc_id: text("thuoc_id").notNull(),
+  so_luong: integer("so_luong").notNull(),
+  cach_dung: text("cach_dung"),
+});
+
+// Type definitions
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+export type Medicine = typeof medicines.$inferSelect;
+export type InsertMedicine = typeof medicines.$inferInsert;
+export type Patient = typeof patients.$inferSelect;
+export type InsertPatient = typeof patients.$inferInsert;
+export type Prescription = typeof prescriptions.$inferSelect;
+export type InsertPrescription = typeof prescriptions.$inferInsert;
+export type PrescriptionMedicine = typeof prescription_medicines.$inferSelect;
+export type InsertPrescriptionMedicine = typeof prescription_medicines.$inferInsert;
+
+// Vietnamese schema types
+export type Thuoc = typeof thuoc.$inferSelect;
+export type InsertThuoc = typeof thuoc.$inferInsert;
+export type Khambenh = typeof khambenh.$inferSelect;
+export type InsertKhambenh = typeof khambenh.$inferInsert;
+export type Toathuoc = typeof toathuoc.$inferSelect;
+export type InsertToathuoc = typeof toathuoc.$inferInsert;
+
+// Insert schemas for new tables
+export const insertThuocSchema = createInsertSchema(thuoc).omit({
+  id: true,
+});
+
+export const insertKhambenhSchema = createInsertSchema(khambenh).omit({
+  id: true,
+});
+
+export const insertToathuocSchema = createInsertSchema(toathuoc).omit({
+  id: true,
+});
+
+// Extended types for complex queries
+export type PrescriptionWithDetails = Prescription & {
+  ten_benhnhan: string;
+  tuoi: number;
+  medicines: (PrescriptionMedicine & { ten_thuoc: string; don_vi: string })[];
+};
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Medicine = typeof medicines.$inferSelect;

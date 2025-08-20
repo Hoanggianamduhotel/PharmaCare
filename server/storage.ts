@@ -1,414 +1,262 @@
 import { supabase } from "./supabase";
 import {
+  type Thuoc,
+  type InsertThuoc,
+  type Toathuoc,
+  type InsertToathuoc,
+  type Khambenh,
+  type InsertKhambenh,
   type User,
   type InsertUser,
-  type Medicine,
-  type InsertMedicine,
-  type Patient,
-  type InsertPatient,
-  type Prescription,
-  type InsertPrescription,
-  type PrescriptionMedicine,
-  type InsertPrescriptionMedicine,
-  type PrescriptionWithDetails,
-  users,
-  medicines,
-  patients,
-  prescriptions,
-  prescription_medicines,
 } from "@shared/schema";
 
-console.log('Initializing Supabase client...');
+console.log('Initializing Supabase storage...');
 
 export interface IStorage {
-  // User methods
+  // User
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
-  // Medicine methods
-  getMedicines(): Promise<Medicine[]>;
-  getMedicine(id: string): Promise<Medicine | undefined>;
-  createMedicine(medicine: InsertMedicine): Promise<Medicine>;
-  updateMedicine(id: string, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined>;
-  deleteMedicine(id: string): Promise<boolean>;
+  // Thuốc
+  getAllThuoc(): Promise<Thuoc[]>;
+  getThuocById(id: string): Promise<Thuoc | undefined>;
+  searchThuocByName(searchTerm: string): Promise<Thuoc[]>;
+  updateThuocStock(id: string, newStock: number): Promise<void>;
 
-  // Patient methods
-  getPatients(): Promise<Patient[]>;
-  getPatient(id: string): Promise<Patient | undefined>;
-  createPatient(patient: InsertPatient): Promise<Patient>;
+  // Khám bệnh
+  getKhambenhById(id: string): Promise<Khambenh | undefined>;
+  createKhambenh(khambenh: InsertKhambenh): Promise<Khambenh>;
 
-  // Prescription methods
-  getPrescriptions(): Promise<PrescriptionWithDetails[]>;
-  getPrescription(id: string): Promise<PrescriptionWithDetails | undefined>;
-  createPrescription(prescription: InsertPrescription): Promise<Prescription>;
-  updatePrescriptionStatus(id: string, status: string): Promise<Prescription | undefined>;
-
-  // Prescription medicine methods
-  getPrescriptionMedicines(prescriptionId: string): Promise<Array<PrescriptionMedicine & { ten_thuoc: string; don_vi: string }>>;
-  createPrescriptionMedicine(prescriptionMedicine: InsertPrescriptionMedicine): Promise<PrescriptionMedicine>;
+  // Toa thuốc
+  createToathuoc(toathuoc: InsertToathuoc[]): Promise<Toathuoc[]>;
+  getToathuocByKhambenhId(khambenhId: string): Promise<Toathuoc[]>;
 }
 
-// In-memory storage for demo when database is unreachable
-class MemoryStorage implements IStorage {
-  private users: Map<string, User> = new Map();
-  private medicines: Map<string, Medicine> = new Map();
-  private patients: Map<string, Patient> = new Map();
-  private prescriptions: Map<string, Prescription> = new Map();
-  private prescriptionMedicines: Map<string, PrescriptionMedicine> = new Map();
+export class MemStorage implements IStorage {
+  private users = new Map<string, User>();
+  private thuocList = new Map<string, Thuoc>();
+  private khambenhList = new Map<string, Khambenh>();
+  private toathuocList = new Map<string, Toathuoc>();
+  private currentUserId = 1;
+  private currentId = 1;
 
   constructor() {
-    // Add sample data
-    const sampleMedicines: Medicine[] = [
-      {
-        id: "1",
-        ten_thuoc: "Paracetamol 500mg",
-        don_vi: "Viên",
-        so_luong_ton: 100,
-        so_luong_dat_hang: 50,
-        gia_nhap: 200,
-        gia_ban: 500,
-        duong_dung: "Uống",
-        created_at: new Date()
-      },
-      {
-        id: "2", 
-        ten_thuoc: "Amoxicillin 250mg",
-        don_vi: "Viên",
-        so_luong_ton: 75,
-        so_luong_dat_hang: 25,
-        gia_nhap: 300,
-        gia_ban: 800,
-        duong_dung: "Uống",
-        created_at: new Date()
-      }
-    ];
-    
-    sampleMedicines.forEach(med => this.medicines.set(med.id, med));
+    this.initializeSampleData();
   }
 
-  async getUser(id: string): Promise<User | undefined> {
+  private initializeSampleData() {
+    const sampleThuoc: Omit<Thuoc, "id">[] = [
+      { ten_thuoc: "Augmentin 625mg", don_vi: "Viên", so_luong_ton: 150 },
+      { ten_thuoc: "Amoxicillin 500mg", don_vi: "Viên", so_luong_ton: 200 },
+      { ten_thuoc: "Aspirin 100mg", don_vi: "Viên", so_luong_ton: 75 },
+      { ten_thuoc: "Azithromycin 250mg", don_vi: "Viên", so_luong_ton: 80 },
+      { ten_thuoc: "Ambroxol 30mg", don_vi: "Viên", so_luong_ton: 120 },
+      { ten_thuoc: "Ampicillin 250mg", don_vi: "Viên", so_luong_ton: 90 },
+      { ten_thuoc: "Amlodipine 5mg", don_vi: "Viên", so_luong_ton: 65 },
+      { ten_thuoc: "Acetaminophen 500mg", don_vi: "Viên", so_luong_ton: 250 },
+      { ten_thuoc: "Betamethasone 0.5mg", don_vi: "Viên", so_luong_ton: 40 },
+      { ten_thuoc: "Bromhexine 8mg", don_vi: "Viên", so_luong_ton: 100 },
+      { ten_thuoc: "Cephalexin 500mg", don_vi: "Viên", so_luong_ton: 85 },
+      { ten_thuoc: "Ciprofloxacin 500mg", don_vi: "Viên", so_luong_ton: 70 },
+      { ten_thuoc: "Clarithromycin 250mg", don_vi: "Viên", so_luong_ton: 55 },
+      { ten_thuoc: "Dexamethasone 0.5mg", don_vi: "Viên", so_luong_ton: 30 },
+      { ten_thuoc: "Diclofenac 50mg", don_vi: "Viên", so_luong_ton: 95 },
+      { ten_thuoc: "Paracetamol 500mg", don_vi: "Viên", so_luong_ton: 300 },
+      { ten_thuoc: "Prednisolone 5mg", don_vi: "Viên", so_luong_ton: 60 },
+      { ten_thuoc: "Vitamin C 1000mg", don_vi: "Viên", so_luong_ton: 100 },
+      { ten_thuoc: "Vitamin B1 100mg", don_vi: "Viên", so_luong_ton: 80 },
+      { ten_thuoc: "Vitamin D3 1000IU", don_vi: "Viên", so_luong_ton: 120 },
+    ];
+
+    sampleThuoc.forEach((t) => {
+      const id = `thuoc-${this.currentId++}`;
+      this.thuocList.set(id, { id, ...t });
+    });
+
+    // Sample khám bệnh
+    const sampleKhambenh: Omit<Khambenh, "id"> = {
+      benh_nhan_id: "bn-001",
+      bac_si_id: "bs-001",
+      ngay_kham: new Date().toISOString().split("T")[0],
+      chan_doan: "Viêm họng cấp",
+      ghi_chu: "Bệnh nhân cần nghỉ ngơi",
+    };
+    const kbId = `kb-${this.currentId++}`;
+    this.khambenhList.set(kbId, { id: kbId, ...sampleKhambenh });
+  }
+
+  // User
+  async getUser(id: number) {
     return this.users.get(id);
   }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(u => u.username === username);
+  async getUserByUsername(username: string) {
+    return Array.from(this.users.values()).find((u) => u.username === username);
   }
-
-  async createUser(user: InsertUser): Promise<User> {
-    const newUser: User = { ...user, id: Date.now().toString() };
-    this.users.set(newUser.id, newUser);
+  async createUser(user: InsertUser) {
+    const id = this.currentUserId++;
+    const newUser: User = { id: id.toString(), ...user };
+    this.users.set(id, newUser);
     return newUser;
   }
 
-  async getMedicines(): Promise<Medicine[]> {
-    return Array.from(this.medicines.values());
+  // Thuốc
+  async getAllThuoc() {
+    return Array.from(this.thuocList.values()).sort((a, b) =>
+      a.ten_thuoc.localeCompare(b.ten_thuoc)
+    );
+  }
+  async getThuocById(id: string) {
+    return this.thuocList.get(id);
+  }
+  async searchThuocByName(searchTerm: string) {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) {
+      return this.getAllThuoc().then((arr) => arr.slice(0, 15));
+    }
+
+    const all = Array.from(this.thuocList.values());
+    const starts = all.filter((t) =>
+      t.ten_thuoc.toLowerCase().startsWith(term)
+    );
+    const incl = all.filter((t) => {
+      const name = t.ten_thuoc.toLowerCase();
+      return name.includes(term) && !name.startsWith(term);
+    });
+    starts.sort((a, b) => a.ten_thuoc.localeCompare(b.ten_thuoc));
+    incl.sort((a, b) => a.ten_thuoc.localeCompare(b.ten_thuoc));
+    return [...starts, ...incl].slice(0, 15);
+  }
+  async updateThuocStock(id: string, newStock: number) {
+    const t = this.thuocList.get(id);
+    if (t) this.thuocList.set(id, { ...t, so_luong_ton: newStock });
   }
 
-  async getMedicine(id: string): Promise<Medicine | undefined> {
-    return this.medicines.get(id);
+  // Khám bệnh
+  async getKhambenhById(id: string) {
+    return this.khambenhList.get(id);
+  }
+  async createKhambenh(k: InsertKhambenh) {
+    const id = `kb-${this.currentId++}`;
+    const newK: Khambenh = { id, ...k };
+    this.khambenhList.set(id, newK);
+    return newK;
   }
 
-  async createMedicine(medicine: InsertMedicine): Promise<Medicine> {
-    const newMedicine: Medicine = { 
-      ...medicine, 
-      id: Date.now().toString(),
-      created_at: new Date()
-    };
-    this.medicines.set(newMedicine.id, newMedicine);
-    return newMedicine;
+  // Toa thuốc
+  async createToathuoc(data: InsertToathuoc[]) {
+    const out: Toathuoc[] = [];
+    for (const d of data) {
+      const id = `tt-${this.currentId++}`;
+      const obj: Toathuoc = { id, ...d };
+      this.toathuocList.set(id, obj);
+      out.push(obj);
+    }
+    return out;
   }
-
-  async updateMedicine(id: string, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined> {
-    const existing = this.medicines.get(id);
-    if (!existing) return undefined;
-    const updated = { ...existing, ...medicine };
-    this.medicines.set(id, updated);
-    return updated;
-  }
-
-  async deleteMedicine(id: string): Promise<boolean> {
-    return this.medicines.delete(id);
-  }
-
-  async getPatients(): Promise<Patient[]> {
-    return Array.from(this.patients.values());
-  }
-
-  async getPatient(id: string): Promise<Patient | undefined> {
-    return this.patients.get(id);
-  }
-
-  async createPatient(patient: InsertPatient): Promise<Patient> {
-    const newPatient: Patient = { 
-      ...patient, 
-      id: Date.now().toString(),
-      created_at: new Date()
-    };
-    this.patients.set(newPatient.id, newPatient);
-    return newPatient;
-  }
-
-  async getPrescriptions(): Promise<PrescriptionWithDetails[]> {
-    return Array.from(this.prescriptions.values()).map(p => ({
-      ...p,
-      ten_benhnhan: this.patients.get(p.patient_id)?.ten_benhnhan || "Unknown",
-      tuoi: 0,
-      medicines: []
-    }));
-  }
-
-  async getPrescription(id: string): Promise<PrescriptionWithDetails | undefined> {
-    const prescription = this.prescriptions.get(id);
-    if (!prescription) return undefined;
-    const patient = this.patients.get(prescription.patient_id);
-    return {
-      ...prescription,
-      ten_benhnhan: patient?.ten_benhnhan || "Unknown",
-      tuoi: 0,
-      medicines: []
-    };
-  }
-
-  async createPrescription(prescription: InsertPrescription): Promise<Prescription> {
-    const newPrescription: Prescription = { 
-      ...prescription, 
-      id: Date.now().toString(),
-      created_at: new Date()
-    };
-    this.prescriptions.set(newPrescription.id, newPrescription);
-    return newPrescription;
-  }
-
-  async updatePrescriptionStatus(id: string, status: string): Promise<Prescription | undefined> {
-    const existing = this.prescriptions.get(id);
-    if (!existing) return undefined;
-    const updated = { ...existing, trang_thai: status };
-    this.prescriptions.set(id, updated);
-    return updated;
-  }
-
-  async getPrescriptionMedicines(prescriptionId: string): Promise<Array<PrescriptionMedicine & { ten_thuoc: string; don_vi: string }>> {
-    return Array.from(this.prescriptionMedicines.values())
-      .filter(pm => pm.prescription_id === prescriptionId)
-      .map(pm => {
-        const medicine = this.medicines.get(pm.medicine_id);
-        return {
-          ...pm,
-          ten_thuoc: medicine?.ten_thuoc || "Unknown",
-          don_vi: medicine?.don_vi || "Unknown"
-        };
-      });
-  }
-
-  async createPrescriptionMedicine(prescriptionMedicine: InsertPrescriptionMedicine): Promise<PrescriptionMedicine> {
-    const newPM: PrescriptionMedicine = { 
-      ...prescriptionMedicine, 
-      id: Date.now().toString(),
-      created_at: new Date()
-    };
-    this.prescriptionMedicines.set(newPM.id, newPM);
-    return newPM;
+  async getToathuocByKhambenhId(khambenhId: string) {
+    return Array.from(this.toathuocList.values()).filter(
+      (t) => t.khambenh_id === khambenhId
+    );
   }
 }
 
+// Supabase storage implementation
 export class SupabaseStorage implements IStorage {
-  async getUser(id: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    return result[0];
+  // User
+  async getUser(id: number): Promise<User | undefined> {
+    const { data } = await supabase.from('users').select('*').eq('id', id).single();
+    return data || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
-    return result[0];
+    const { data } = await supabase.from('users').select('*').eq('username', username).single();
+    return data || undefined;
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(user).returning();
-    return result[0];
+    const { data, error } = await supabase.from('users').insert(user).select().single();
+    if (error) throw error;
+    return data;
   }
 
-  async getMedicines(): Promise<Medicine[]> {
-    return await db.select().from(medicines).orderBy(asc(medicines.ten_thuoc));
+  // Thuốc
+  async getAllThuoc(): Promise<Thuoc[]> {
+    const { data, error } = await supabase.from('thuoc').select('*').order('ten_thuoc');
+    if (error) throw error;
+    return data || [];
   }
 
-  async getMedicine(id: string): Promise<Medicine | undefined> {
-    const result = await db.select().from(medicines).where(eq(medicines.id, id)).limit(1);
-    return result[0];
+  async getThuocById(id: string): Promise<Thuoc | undefined> {
+    const { data } = await supabase.from('thuoc').select('*').eq('id', id).single();
+    return data || undefined;
   }
 
-  async createMedicine(medicine: InsertMedicine): Promise<Medicine> {
-    const result = await db.insert(medicines).values(medicine).returning();
-    return result[0];
+  async searchThuocByName(searchTerm: string): Promise<Thuoc[]> {
+    const { data, error } = await supabase
+      .from('thuoc')
+      .select('*')
+      .ilike('ten_thuoc', `%${searchTerm}%`)
+      .order('ten_thuoc')
+      .limit(15);
+    if (error) throw error;
+    return data || [];
   }
 
-  async updateMedicine(id: string, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined> {
-    const result = await db.update(medicines).set(medicine).where(eq(medicines.id, id)).returning();
-    return result[0];
+  async updateThuocStock(id: string, newStock: number): Promise<void> {
+    const { error } = await supabase
+      .from('thuoc')
+      .update({ so_luong_ton: newStock })
+      .eq('id', id);
+    if (error) throw error;
   }
 
-  async deleteMedicine(id: string): Promise<boolean> {
-    const result = await db.delete(medicines).where(eq(medicines.id, id));
-    return result.length > 0;
+  // Khám bệnh
+  async getKhambenhById(id: string): Promise<Khambenh | undefined> {
+    const { data } = await supabase.from('khambenh').select('*').eq('id', id).single();
+    return data || undefined;
   }
 
-  async getPatients(): Promise<Patient[]> {
-    return await db.select().from(patients).orderBy(asc(patients.ten_benhnhan));
+  async createKhambenh(khambenh: InsertKhambenh): Promise<Khambenh> {
+    const { data, error } = await supabase.from('khambenh').insert(khambenh).select().single();
+    if (error) throw error;
+    return data;
   }
 
-  async getPatient(id: string): Promise<Patient | undefined> {
-    const result = await db.select().from(patients).where(eq(patients.id, id)).limit(1);
-    return result[0];
+  // Toa thuốc
+  async createToathuoc(toathuoc: InsertToathuoc[]): Promise<Toathuoc[]> {
+    const { data, error } = await supabase.from('toathuoc').insert(toathuoc).select();
+    if (error) throw error;
+    return data || [];
   }
 
-  async createPatient(patient: InsertPatient): Promise<Patient> {
-    const result = await db.insert(patients).values(patient).returning();
-    return result[0];
-  }
-
-  async getPrescriptions(): Promise<PrescriptionWithDetails[]> {
-    const prescriptionsResult = await db
-      .select({
-        id: prescriptions.id,
-        patient_id: prescriptions.patient_id,
-        khambenh_id: prescriptions.khambenh_id,
-        ngaytoa: prescriptions.ngaytoa,
-        chan_doan: prescriptions.chan_doan,
-        ten_bac_si: prescriptions.ten_bac_si,
-        trang_thai: prescriptions.trang_thai,
-        created_at: prescriptions.created_at,
-        ten_benhnhan: patients.ten_benhnhan,
-      })
-      .from(prescriptions)
-      .innerJoin(patients, eq(prescriptions.patient_id, patients.id))
-      .orderBy(desc(prescriptions.created_at));
-
-    const prescriptionsWithMedicines: PrescriptionWithDetails[] = [];
-
-    for (const prescription of prescriptionsResult) {
-      const medicinesResult = await db
-        .select({
-          id: prescription_medicines.id,
-          prescription_id: prescription_medicines.prescription_id,
-          medicine_id: prescription_medicines.medicine_id,
-          so_lan_dung: prescription_medicines.so_lan_dung,
-          so_luong_moi_lan: prescription_medicines.so_luong_moi_lan,
-          tong_so_luong: prescription_medicines.tong_so_luong,
-          created_at: prescription_medicines.created_at,
-          ten_thuoc: medicines.ten_thuoc,
-          don_vi: medicines.don_vi,
-        })
-        .from(prescription_medicines)
-        .innerJoin(medicines, eq(prescription_medicines.medicine_id, medicines.id))
-        .where(eq(prescription_medicines.prescription_id, prescription.id));
-
-      prescriptionsWithMedicines.push({
-        ...prescription,
-        medicines: medicinesResult,
-      });
-    }
-
-    return prescriptionsWithMedicines;
-  }
-
-  async getPrescription(id: string): Promise<PrescriptionWithDetails | undefined> {
-    const prescriptionResult = await db
-      .select({
-        id: prescriptions.id,
-        patient_id: prescriptions.patient_id,
-        khambenh_id: prescriptions.khambenh_id,
-        ngaytoa: prescriptions.ngaytoa,
-        chan_doan: prescriptions.chan_doan,
-        ten_bac_si: prescriptions.ten_bac_si,
-        trang_thai: prescriptions.trang_thai,
-        created_at: prescriptions.created_at,
-        ten_benhnhan: patients.ten_benhnhan,
-      })
-      .from(prescriptions)
-      .innerJoin(patients, eq(prescriptions.patient_id, patients.id))
-      .where(eq(prescriptions.id, id))
-      .limit(1);
-
-    if (!prescriptionResult[0]) return undefined;
-
-    const medicinesResult = await db
-      .select({
-        id: prescription_medicines.id,
-        prescription_id: prescription_medicines.prescription_id,
-        medicine_id: prescription_medicines.medicine_id,
-        so_lan_dung: prescription_medicines.so_lan_dung,
-        so_luong_moi_lan: prescription_medicines.so_luong_moi_lan,
-        tong_so_luong: prescription_medicines.tong_so_luong,
-        created_at: prescription_medicines.created_at,
-        ten_thuoc: medicines.ten_thuoc,
-        don_vi: medicines.don_vi,
-      })
-      .from(prescription_medicines)
-      .innerJoin(medicines, eq(prescription_medicines.medicine_id, medicines.id))
-      .where(eq(prescription_medicines.prescription_id, id));
-
-    return {
-      ...prescriptionResult[0],
-      medicines: medicinesResult,
-    };
-  }
-
-  async createPrescription(prescription: InsertPrescription): Promise<Prescription> {
-    const result = await db.insert(prescriptions).values(prescription).returning();
-    return result[0];
-  }
-
-  async updatePrescriptionStatus(id: string, status: string): Promise<Prescription | undefined> {
-    const result = await db.update(prescriptions).set({ trang_thai: status }).where(eq(prescriptions.id, id)).returning();
-    return result[0];
-  }
-
-  async getPrescriptionMedicines(prescriptionId: string): Promise<Array<PrescriptionMedicine & { ten_thuoc: string; don_vi: string }>> {
-    return await db
-      .select({
-        id: prescription_medicines.id,
-        prescription_id: prescription_medicines.prescription_id,
-        medicine_id: prescription_medicines.medicine_id,
-        so_lan_dung: prescription_medicines.so_lan_dung,
-        so_luong_moi_lan: prescription_medicines.so_luong_moi_lan,
-        tong_so_luong: prescription_medicines.tong_so_luong,
-        created_at: prescription_medicines.created_at,
-        ten_thuoc: medicines.ten_thuoc,
-        don_vi: medicines.don_vi,
-      })
-      .from(prescription_medicines)
-      .innerJoin(medicines, eq(prescription_medicines.medicine_id, medicines.id))
-      .where(eq(prescription_medicines.prescription_id, prescriptionId));
-  }
-
-  async createPrescriptionMedicine(prescriptionMedicine: InsertPrescriptionMedicine): Promise<PrescriptionMedicine> {
-    const result = await db.insert(prescription_medicines).values(prescriptionMedicine).returning();
-    return result[0];
+  async getToathuocByKhambenhId(khambenhId: string): Promise<Toathuoc[]> {
+    const { data, error } = await supabase
+      .from('toathuoc')
+      .select('*')
+      .eq('khambenh_id', khambenhId);
+    if (error) throw error;
+    return data || [];
   }
 }
 
-// Initialize with memory storage for demo, try database when possible
-let storage: IStorage = new MemoryStorage();
+// Initialize storage with fallback
+let storage: IStorage = new MemStorage();
 let isUsingMemoryStorage = true;
 
-// Try to initialize database storage
+// Try to initialize Supabase storage
 const initializeStorage = async () => {
   try {
-    const dbStorage = new DatabaseStorage();
-    // Test connection with timeout
-    const testPromise = dbStorage.getMedicines();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timeout')), 8000)
-    );
-    
-    await Promise.race([testPromise, timeoutPromise]);
-    storage = dbStorage;
+    const supabaseStorage = new SupabaseStorage();
+    // Test connection
+    await supabaseStorage.getAllThuoc();
+    storage = supabaseStorage;
     isUsingMemoryStorage = false;
     console.log('✅ Connected to Supabase database successfully');
-  } catch (error) {
+  } catch (error: any) {
     console.log('⚠️  Supabase connection failed, using memory storage');
     console.log('Error details:', error.message);
-    storage = new MemoryStorage();
+    storage = new MemStorage();
     isUsingMemoryStorage = true;
   }
 };
