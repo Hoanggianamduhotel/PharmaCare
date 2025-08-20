@@ -1,5 +1,5 @@
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { eq, desc, asc } from "drizzle-orm";
 import {
   type User,
@@ -20,7 +20,11 @@ import {
   prescription_medicines,
 } from "@shared/schema";
 
-const sql = neon(process.env.DATABASE_URL!);
+// Create connection string from Supabase URL
+const connectionString = process.env.DATABASE_URL || 
+  `postgresql://postgres:${process.env.SUPABASE_ANON_KEY}@${process.env.SUPABASE_URL?.replace('https://', '').replace('.supabase.co', '.pooler.supabase.com')}:6543/postgres`;
+
+const sql = postgres(connectionString);
 const db = drizzle(sql);
 
 export interface IStorage {
@@ -89,7 +93,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMedicine(id: string): Promise<boolean> {
     const result = await db.delete(medicines).where(eq(medicines.id, id));
-    return result.rowCount > 0;
+    return result.length > 0;
   }
 
   async getPatients(): Promise<Patient[]> {
