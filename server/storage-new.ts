@@ -11,14 +11,9 @@ import {
   type PrescriptionMedicine,
   type InsertPrescriptionMedicine,
   type PrescriptionWithDetails,
-  users,
-  medicines,
-  patients,
-  prescriptions,
-  prescription_medicines,
 } from "@shared/schema";
 
-console.log('Initializing Supabase client...');
+console.log('Initializing Supabase storage...');
 
 export interface IStorage {
   // User methods
@@ -49,7 +44,7 @@ export interface IStorage {
   createPrescriptionMedicine(prescriptionMedicine: InsertPrescriptionMedicine): Promise<PrescriptionMedicine>;
 }
 
-// In-memory storage for demo when database is unreachable
+// In-memory storage for demo
 class MemoryStorage implements IStorage {
   private users: Map<string, User> = new Map();
   private medicines: Map<string, Medicine> = new Map();
@@ -212,178 +207,146 @@ class MemoryStorage implements IStorage {
   }
 }
 
+// Supabase storage implementation
 export class SupabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    return result[0];
+    const { data } = await supabase.from('users').select('*').eq('id', id).single();
+    return data || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
-    return result[0];
+    const { data } = await supabase.from('users').select('*').eq('username', username).single();
+    return data || undefined;
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(user).returning();
-    return result[0];
+    const { data, error } = await supabase.from('users').insert(user).select().single();
+    if (error) throw error;
+    return data;
   }
 
   async getMedicines(): Promise<Medicine[]> {
-    return await db.select().from(medicines).orderBy(asc(medicines.ten_thuoc));
+    const { data, error } = await supabase.from('medicines').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
   }
 
   async getMedicine(id: string): Promise<Medicine | undefined> {
-    const result = await db.select().from(medicines).where(eq(medicines.id, id)).limit(1);
-    return result[0];
+    const { data } = await supabase.from('medicines').select('*').eq('id', id).single();
+    return data || undefined;
   }
 
   async createMedicine(medicine: InsertMedicine): Promise<Medicine> {
-    const result = await db.insert(medicines).values(medicine).returning();
-    return result[0];
+    const { data, error } = await supabase.from('medicines').insert(medicine).select().single();
+    if (error) throw error;
+    return data;
   }
 
   async updateMedicine(id: string, medicine: Partial<InsertMedicine>): Promise<Medicine | undefined> {
-    const result = await db.update(medicines).set(medicine).where(eq(medicines.id, id)).returning();
-    return result[0];
+    const { data, error } = await supabase.from('medicines').update(medicine).eq('id', id).select().single();
+    if (error) throw error;
+    return data || undefined;
   }
 
   async deleteMedicine(id: string): Promise<boolean> {
-    const result = await db.delete(medicines).where(eq(medicines.id, id));
-    return result.length > 0;
+    const { error } = await supabase.from('medicines').delete().eq('id', id);
+    return !error;
   }
 
   async getPatients(): Promise<Patient[]> {
-    return await db.select().from(patients).orderBy(asc(patients.ten_benhnhan));
+    const { data, error } = await supabase.from('patients').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
   }
 
   async getPatient(id: string): Promise<Patient | undefined> {
-    const result = await db.select().from(patients).where(eq(patients.id, id)).limit(1);
-    return result[0];
+    const { data } = await supabase.from('patients').select('*').eq('id', id).single();
+    return data || undefined;
   }
 
   async createPatient(patient: InsertPatient): Promise<Patient> {
-    const result = await db.insert(patients).values(patient).returning();
-    return result[0];
+    const { data, error } = await supabase.from('patients').insert(patient).select().single();
+    if (error) throw error;
+    return data;
   }
 
   async getPrescriptions(): Promise<PrescriptionWithDetails[]> {
-    const prescriptionsResult = await db
-      .select({
-        id: prescriptions.id,
-        patient_id: prescriptions.patient_id,
-        khambenh_id: prescriptions.khambenh_id,
-        ngaytoa: prescriptions.ngaytoa,
-        chan_doan: prescriptions.chan_doan,
-        ten_bac_si: prescriptions.ten_bac_si,
-        trang_thai: prescriptions.trang_thai,
-        created_at: prescriptions.created_at,
-        ten_benhnhan: patients.ten_benhnhan,
-      })
-      .from(prescriptions)
-      .innerJoin(patients, eq(prescriptions.patient_id, patients.id))
-      .orderBy(desc(prescriptions.created_at));
-
-    const prescriptionsWithMedicines: PrescriptionWithDetails[] = [];
-
-    for (const prescription of prescriptionsResult) {
-      const medicinesResult = await db
-        .select({
-          id: prescription_medicines.id,
-          prescription_id: prescription_medicines.prescription_id,
-          medicine_id: prescription_medicines.medicine_id,
-          so_lan_dung: prescription_medicines.so_lan_dung,
-          so_luong_moi_lan: prescription_medicines.so_luong_moi_lan,
-          tong_so_luong: prescription_medicines.tong_so_luong,
-          created_at: prescription_medicines.created_at,
-          ten_thuoc: medicines.ten_thuoc,
-          don_vi: medicines.don_vi,
-        })
-        .from(prescription_medicines)
-        .innerJoin(medicines, eq(prescription_medicines.medicine_id, medicines.id))
-        .where(eq(prescription_medicines.prescription_id, prescription.id));
-
-      prescriptionsWithMedicines.push({
-        ...prescription,
-        medicines: medicinesResult,
-      });
-    }
-
-    return prescriptionsWithMedicines;
+    const { data, error } = await supabase
+      .from('prescriptions')
+      .select(`
+        *,
+        patients(ten_benhnhan, tuoi)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return (data || []).map((p: any) => ({
+      ...p,
+      ten_benhnhan: p.patients?.ten_benhnhan || 'Unknown',
+      tuoi: p.patients?.tuoi || 0,
+      medicines: []
+    }));
   }
 
   async getPrescription(id: string): Promise<PrescriptionWithDetails | undefined> {
-    const prescriptionResult = await db
-      .select({
-        id: prescriptions.id,
-        patient_id: prescriptions.patient_id,
-        khambenh_id: prescriptions.khambenh_id,
-        ngaytoa: prescriptions.ngaytoa,
-        chan_doan: prescriptions.chan_doan,
-        ten_bac_si: prescriptions.ten_bac_si,
-        trang_thai: prescriptions.trang_thai,
-        created_at: prescriptions.created_at,
-        ten_benhnhan: patients.ten_benhnhan,
-      })
-      .from(prescriptions)
-      .innerJoin(patients, eq(prescriptions.patient_id, patients.id))
-      .where(eq(prescriptions.id, id))
-      .limit(1);
-
-    if (!prescriptionResult[0]) return undefined;
-
-    const medicinesResult = await db
-      .select({
-        id: prescription_medicines.id,
-        prescription_id: prescription_medicines.prescription_id,
-        medicine_id: prescription_medicines.medicine_id,
-        so_lan_dung: prescription_medicines.so_lan_dung,
-        so_luong_moi_lan: prescription_medicines.so_luong_moi_lan,
-        tong_so_luong: prescription_medicines.tong_so_luong,
-        created_at: prescription_medicines.created_at,
-        ten_thuoc: medicines.ten_thuoc,
-        don_vi: medicines.don_vi,
-      })
-      .from(prescription_medicines)
-      .innerJoin(medicines, eq(prescription_medicines.medicine_id, medicines.id))
-      .where(eq(prescription_medicines.prescription_id, id));
-
+    const { data } = await supabase
+      .from('prescriptions')
+      .select(`
+        *,
+        patients(ten_benhnhan, tuoi),
+        prescription_medicines(
+          *,
+          medicines(ten_thuoc, don_vi)
+        )
+      `)
+      .eq('id', id)
+      .single();
+    
+    if (!data) return undefined;
+    
     return {
-      ...prescriptionResult[0],
-      medicines: medicinesResult,
+      ...data,
+      ten_benhnhan: data.patients?.ten_benhnhan || 'Unknown',
+      tuoi: data.patients?.tuoi || 0,
+      medicines: data.prescription_medicines || []
     };
   }
 
   async createPrescription(prescription: InsertPrescription): Promise<Prescription> {
-    const result = await db.insert(prescriptions).values(prescription).returning();
-    return result[0];
+    const { data, error } = await supabase.from('prescriptions').insert(prescription).select().single();
+    if (error) throw error;
+    return data;
   }
 
   async updatePrescriptionStatus(id: string, status: string): Promise<Prescription | undefined> {
-    const result = await db.update(prescriptions).set({ trang_thai: status }).where(eq(prescriptions.id, id)).returning();
-    return result[0];
+    const { data, error } = await supabase.from('prescriptions').update({ trang_thai: status }).eq('id', id).select().single();
+    if (error) throw error;
+    return data || undefined;
   }
 
   async getPrescriptionMedicines(prescriptionId: string): Promise<Array<PrescriptionMedicine & { ten_thuoc: string; don_vi: string }>> {
-    return await db
-      .select({
-        id: prescription_medicines.id,
-        prescription_id: prescription_medicines.prescription_id,
-        medicine_id: prescription_medicines.medicine_id,
-        so_lan_dung: prescription_medicines.so_lan_dung,
-        so_luong_moi_lan: prescription_medicines.so_luong_moi_lan,
-        tong_so_luong: prescription_medicines.tong_so_luong,
-        created_at: prescription_medicines.created_at,
-        ten_thuoc: medicines.ten_thuoc,
-        don_vi: medicines.don_vi,
-      })
-      .from(prescription_medicines)
-      .innerJoin(medicines, eq(prescription_medicines.medicine_id, medicines.id))
-      .where(eq(prescription_medicines.prescription_id, prescriptionId));
+    const { data, error } = await supabase
+      .from('prescription_medicines')
+      .select(`
+        *,
+        medicines(ten_thuoc, don_vi)
+      `)
+      .eq('prescription_id', prescriptionId);
+    
+    if (error) throw error;
+    
+    return (data || []).map((pm: any) => ({
+      ...pm,
+      ten_thuoc: pm.medicines?.ten_thuoc || 'Unknown',
+      don_vi: pm.medicines?.don_vi || 'Unknown'
+    }));
   }
 
   async createPrescriptionMedicine(prescriptionMedicine: InsertPrescriptionMedicine): Promise<PrescriptionMedicine> {
-    const result = await db.insert(prescription_medicines).values(prescriptionMedicine).returning();
-    return result[0];
+    const { data, error } = await supabase.from('prescription_medicines').insert(prescriptionMedicine).select().single();
+    if (error) throw error;
+    return data;
   }
 }
 
@@ -391,21 +354,21 @@ export class SupabaseStorage implements IStorage {
 let storage: IStorage = new MemoryStorage();
 let isUsingMemoryStorage = true;
 
-// Try to initialize database storage
+// Try to initialize Supabase storage
 const initializeStorage = async () => {
   try {
-    const dbStorage = new DatabaseStorage();
+    const supabaseStorage = new SupabaseStorage();
     // Test connection with timeout
-    const testPromise = dbStorage.getMedicines();
+    const testPromise = supabaseStorage.getMedicines();
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Connection timeout')), 8000)
     );
     
     await Promise.race([testPromise, timeoutPromise]);
-    storage = dbStorage;
+    storage = supabaseStorage;
     isUsingMemoryStorage = false;
     console.log('✅ Connected to Supabase database successfully');
-  } catch (error) {
+  } catch (error: any) {
     console.log('⚠️  Supabase connection failed, using memory storage');
     console.log('Error details:', error.message);
     storage = new MemoryStorage();
