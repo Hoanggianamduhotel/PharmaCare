@@ -1,0 +1,70 @@
+5:46:33 PM: Netlify Build                                                 
+5:46:33 PM: ────────────────────────────────────────────────────────────────
+5:46:33 PM: ​
+5:46:33 PM: ❯ Version
+5:46:33 PM:   @netlify/build 35.1.2
+5:46:33 PM: ​
+5:46:33 PM: ❯ Flags
+5:46:33 PM:   accountId: 6895d75ae37cc24ee002d1b7
+5:46:33 PM:   baseRelDir: true
+5:46:33 PM:   buildId: 68a6f8d5a48fb20739e4b200
+5:46:33 PM:   deployId: 68a6f8d5a48fb20739e4b202
+5:46:33 PM: ​
+5:46:33 PM: ❯ Current directory
+5:46:33 PM:   /opt/build/repo
+5:46:33 PM: ​
+5:46:33 PM: ❯ Config file
+5:46:33 PM:   /opt/build/repo/netlify.toml
+5:46:33 PM: ​
+5:46:33 PM: ❯ Context
+5:46:33 PM:   production
+5:46:33 PM: ​
+5:46:33 PM: ❯ Installing extensions
+5:46:33 PM:    - neon
+5:46:58 PM: ​
+5:46:58 PM: ❯ Loading extensions
+5:46:58 PM:    - neon
+5:46:58 PM: ​
+5:46:58 PM: build.command from netlify.toml                               
+5:46:58 PM: ────────────────────────────────────────────────────────────────
+5:46:58 PM: ​
+5:46:58 PM: $ npm install && ./node_modules/.bin/vite build --config vite.config.prod.ts && ./node_modules/.bin/esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+5:46:59 PM: up to date, audited 385 packages in 938ms
+5:46:59 PM: 53 packages are looking for funding
+5:46:59 PM:   run `npm fund` for details
+5:46:59 PM: 3 low severity vulnerabilities
+5:46:59 PM: To address all issues, run:
+5:46:59 PM:   npm audit fix
+5:46:59 PM: Run `npm audit` for details.
+5:46:59 PM: bash: line 1: ./node_modules/.bin/vite: No such file or directory
+5:47:00 PM: Failed during stage 'building site': Build script returned non-zero exit code: 2 (https://ntl.fyi/exit-code-2)
+5:47:00 PM: ​
+5:47:00 PM: "build.command" failed                                        
+5:47:00 PM: ────────────────────────────────────────────────────────────────
+5:47:00 PM: ​
+5:47:00 PM:   Error message
+5:47:00 PM:   Command failed with exit code 127: npm install && ./node_modules/.bin/vite build --config vite.config.prod.ts && ./node_modules/.bin/esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist (https://ntl.fyi/exit-code-127)
+5:47:00 PM: ​
+5:47:00 PM:   Error location
+5:47:00 PM:   In build.command from netlify.toml:
+5:47:00 PM:   npm install && ./node_modules/.bin/vite build --config vite.config.prod.ts && ./node_modules/.bin/esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+5:47:00 PM: ​
+5:47:00 PM:   Resolved config
+5:47:00 PM:   build:
+5:47:00 PM:     command: npm install && ./node_modules/.bin/vite build --config
+5:47:00 PM:       vite.config.prod.ts && ./node_modules/.bin/esbuild server/index.ts
+5:47:00 PM:       --platform=node --packages=external --bundle --format=esm --outdir=dist
+5:47:00 PM:     commandOrigin: config
+5:47:00 PM:     environment:
+5:47:00 PM:       - NODE_ENV
+5:47:00 PM:       - VITE_API_URL
+5:47:00 PM:     publish: /opt/build/repo/dist/public
+5:47:00 PM:     publishOrigin: config
+5:47:00 PM:   redirects:
+5:47:00 PM:     - from: /*
+      status: 200
+      to: /index.html
+  redirectsOrigin: config
+5:47:00 PM: Build failed due to a user error: Build script returned non-zero exit code: 2
+5:47:00 PM: Failing build: Failed to build site
+5:47:01 PM: Finished processing build request in 38.063s
