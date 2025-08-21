@@ -17,7 +17,7 @@ if (existsSync('dist')) {
 // Build client with production config
 console.log('⚡ Building React app with Vite...');
 try {
-  execSync('vite build --config vite.config.prod.ts', { 
+  execSync('npx vite build --config vite.config.prod.ts', { 
     stdio: 'inherit',
     env: { ...process.env, NODE_ENV: 'production' }
   });
