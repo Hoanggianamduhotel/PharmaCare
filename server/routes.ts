@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const thuoc = await storage.getAllThuoc();
       
       const totalMedicines = thuoc.length;
-      const lowStockMedicines = thuoc.filter(t => t.so_luong_ton <= 10).length;
+      const lowStockMedicines = thuoc.filter(t => Number(t.so_luong_ton || 0) <= 10).length;
       const pendingPrescriptions = 0; // No prescriptions in simplified schema yet
       const totalValue = 0; // No pricing in simplified schema yet
       
