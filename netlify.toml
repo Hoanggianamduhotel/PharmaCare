@@ -1,7 +1,45 @@
 [build]
-  publish = "dist/public"
-  command = "npm run build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
+  publish = "dist"
+  command = "npm run build"
+  functions = "netlify/functions"
 
+# API redirects to Netlify Functions
+[[redirects]]
+  from = "/api/medicines/*"
+  to = "/.netlify/functions/medicines"
+  status = 200
+
+[[redirects]]
+  from = "/api/medicines"
+  to = "/.netlify/functions/medicines"
+  status = 200
+
+[[redirects]]
+  from = "/api/thuoc/*"
+  to = "/.netlify/functions/thuoc"
+  status = 200
+
+[[redirects]]
+  from = "/api/thuoc"
+  to = "/.netlify/functions/thuoc"
+  status = 200
+
+[[redirects]]
+  from = "/api/statistics"
+  to = "/.netlify/functions/statistics"
+  status = 200
+
+[[redirects]]
+  from = "/api/prescriptions"
+  to = "/.netlify/functions/prescriptions"
+  status = 200
+
+[[redirects]]
+  from = "/api/patients"
+  to = "/.netlify/functions/patients"
+  status = 200
+
+# SPA fallback for client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -9,4 +47,3 @@
 
 [build.environment]
   NODE_ENV = "production"
-  VITE_API_URL = "/api"

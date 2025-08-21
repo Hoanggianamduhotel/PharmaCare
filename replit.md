@@ -12,6 +12,12 @@ This is a Vietnamese pharmacy management system built with React, Express, and S
 - ✅ Solved Netlify deployment issues with production Vite config and proper dependencies
 - ✅ Fixed Netlify deployment completely - simple solution using npm run build instead of hard-coded paths
 - ✅ Final working solution: npm run build + npx esbuild (clean và maintainable)
+- ✅ **MAJOR**: Converted Express app to Netlify Functions for full serverless deployment
+- ✅ Created 5 Netlify Functions: medicines, thuoc, statistics, prescriptions, patients
+- ✅ Implemented proper CORS support and error handling in all functions
+- ✅ Updated netlify.toml with API routing to functions
+- ✅ Added @netlify/functions dependency for serverless deployment
+- ✅ Application now fully ready for Netlify deployment with backend support
 
 # User Preferences
 
@@ -28,11 +34,13 @@ Preferred communication style: Simple, everyday language.
 - **Theme System**: Custom theme provider supporting light/dark modes
 
 ## Backend Architecture
-- **Express.js Server**: RESTful API with TypeScript
-- **Database Layer**: Drizzle ORM for type-safe database operations
+- **Serverless Functions**: Netlify Functions with TypeScript for API endpoints
+- **Express.js Server**: Available for local development (npm run dev)
+- **Database Layer**: Supabase PostgreSQL with direct client connections
 - **Schema Design**: Five main entities (users, medicines, patients, prescriptions, prescription_medicines)
-- **API Structure**: Organized with `/api` prefix for all endpoints
-- **Error Handling**: Centralized error middleware with proper HTTP status codes
+- **API Structure**: Functions in `/netlify/functions/` mapped to `/api` routes
+- **Error Handling**: Per-function error handling with proper HTTP status codes and CORS
+- **Deployment Ready**: Full serverless architecture suitable for Netlify deployment
 
 ## Data Storage Solutions
 - **Primary Database**: PostgreSQL with Neon serverless driver
