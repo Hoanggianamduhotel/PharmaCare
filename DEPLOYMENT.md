@@ -36,11 +36,11 @@
    /*    /index.html   200
    ```
 
-3. **netlify.toml** - Simplified Netlify configuration
+3. **netlify.toml** - Fixed Netlify configuration với npx
    ```toml
    [build]
      publish = "dist/public"
-     command = "npm run build"
+     command = "npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
 
    [[redirects]]
      from = "/*"
@@ -60,7 +60,7 @@
 
 ### 1. Build local để test:
 ```bash
-npm run build
+npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 ```
 
 ### 2. Check build output:
@@ -73,7 +73,7 @@ ls -la dist/public/
 - Connect GitHub repo 
 - Build settings sẽ auto đọc từ netlify.toml
 - Hoặc manual config:
-  - Build command: `npm run build`
+  - Build command: `npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist`
   - Publish directory: `dist/public`
 
 ## Common Issues Fixed:
@@ -86,8 +86,8 @@ ls -la dist/public/
 ✅ **Assets Path**: base path được set đúng trong vite config
 
 ## Deployment được fix hoàn chỉnh:
-- Local build: ✅ (npm run build works)  
-- Netlify build: ✅ (tất cả dependencies có sẵn)
+- Local build: ✅ (npx commands work)  
+- Netlify build: ✅ (npx đảm bảo tools được tìm thấy)
 - SPA routing: ✅ (_redirects file)
 - Production config: ✅ (vite.config.prod.ts)  
 
