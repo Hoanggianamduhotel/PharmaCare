@@ -1,6 +1,6 @@
 [build]
   publish = "dist/public"
-  command = "npm ci && npx --yes vite@5.4.19 build --config vite.config.prod.ts && npx --yes esbuild@0.25.0 server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
+  command = "npm run build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
 
 [[redirects]]
   from = "/*"
