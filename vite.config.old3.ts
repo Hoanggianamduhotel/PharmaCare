@@ -19,7 +19,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
   },
@@ -28,16 +27,12 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    host: "0.0.0.0",
+    port: 5000,
+    allowedHosts: "all",
     fs: {
       strict: true,
       deny: ["**/.*"],
     },
-    port: 5000,
-    host: true, // cho phép external access (0.0.0.0)
-    allowedHosts: [
-      "localhost",
-      "127.0.0.1",
-      "f1730b97-9abd-4ee2-ae47-c9c2abfcd0bd-00-1i9t48hgmni4f.worf.replit.dev"
-    ],
   },
 });
