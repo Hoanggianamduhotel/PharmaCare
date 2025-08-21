@@ -28,10 +28,10 @@ import type { Medicine } from "@shared/schema";
 const medicineSchema = z.object({
   ten_thuoc: z.string().min(1, "Tên thuốc không được để trống"),
   don_vi: z.string().min(1, "Đơn vị không được để trống"),
-  so_luong_ton: z.number().min(0, "Số lượng tồn phải >= 0").or(z.undefined()),
-  gia_nhap: z.number().min(0, "Giá nhập phải >= 0").or(z.undefined()),
-  gia_ban: z.number().min(0, "Giá bán phải >= 0").or(z.undefined()),
-  so_luong_dat_hang: z.number().min(0, "Số lượng đặt hàng phải >= 0").or(z.undefined()),
+  so_luong_ton: z.number().min(0, "Số lượng tồn phải >= 0"),
+  gia_nhap: z.number().min(0, "Giá nhập phải >= 0"),
+  gia_ban: z.number().min(0, "Giá bán phải >= 0"),
+  so_luong_dat_hang: z.number().min(0, "Số lượng đặt hàng phải >= 0"),
   duong_dung: z.string().min(1, "Đường dùng không được để trống"),
 });
 
@@ -66,25 +66,17 @@ export function AddMedicineDialog({
     defaultValues: {
       ten_thuoc: "",
       don_vi: "",
-      so_luong_ton: undefined,
-      gia_nhap: undefined,
-      gia_ban: undefined,
-      so_luong_dat_hang: undefined,
+      so_luong_ton: 0,
+      gia_nhap: 0,
+      gia_ban: 0,
+      so_luong_dat_hang: 0,
       duong_dung: "",
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: z.infer<typeof medicineSchema>) => {
-      // Handle undefined values by converting to 0 for API
-      const processedData = {
-        ...data,
-        so_luong_ton: data.so_luong_ton ?? 0,
-        gia_nhap: data.gia_nhap ?? 0,
-        gia_ban: data.gia_ban ?? 0,
-        so_luong_dat_hang: data.so_luong_dat_hang ?? 0,
-      };
-      const response = await apiRequest("POST", "/api/medicines", processedData);
+      const response = await apiRequest("POST", "/api/medicines", data);
       return response.json();
     },
     onSuccess: () => {
@@ -138,12 +130,12 @@ export function AddMedicineDialog({
       const updateData: Partial<z.infer<typeof medicineSchema>> = {};
       
       // Only update fields that have changed
-      if (data.so_luong_ton && data.so_luong_ton > 0) {
+      if (data.so_luong_ton > 0) {
         updateData.so_luong_ton = selectedExistingMedicine.so_luong_ton + data.so_luong_ton;
       }
-      if (data.gia_nhap && data.gia_nhap > 0) updateData.gia_nhap = data.gia_nhap;
-      if (data.gia_ban && data.gia_ban > 0) updateData.gia_ban = data.gia_ban;
-      if (data.so_luong_dat_hang && data.so_luong_dat_hang > 0) updateData.so_luong_dat_hang = data.so_luong_dat_hang;
+      if (data.gia_nhap > 0) updateData.gia_nhap = data.gia_nhap;
+      if (data.gia_ban > 0) updateData.gia_ban = data.gia_ban;
+      if (data.so_luong_dat_hang > 0) updateData.so_luong_dat_hang = data.so_luong_dat_hang;
       if (data.duong_dung) updateData.duong_dung = data.duong_dung;
 
       updateMutation.mutate({
@@ -269,12 +261,11 @@ export function AddMedicineDialog({
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder=""
+                          placeholder="0"
                           {...field}
                           ref={soLuongTonRef}
                           onKeyDown={(e) => handleKeyDown(e, soLuongDatHangRef)}
-                          onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
@@ -291,12 +282,11 @@ export function AddMedicineDialog({
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder=""
+                          placeholder="0"
                           {...field}
                           ref={soLuongDatHangRef}
                           onKeyDown={(e) => handleKeyDown(e, giaNhapRef)}
-                          onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
@@ -315,12 +305,11 @@ export function AddMedicineDialog({
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder=""
+                          placeholder="0"
                           {...field}
                           ref={giaNhapRef}
                           onKeyDown={(e) => handleKeyDown(e, giaBanRef)}
-                          onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
@@ -337,12 +326,11 @@ export function AddMedicineDialog({
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder=""
+                          placeholder="0"
                           {...field}
                           ref={giaBanRef}
                           onKeyDown={(e) => handleKeyDown(e, duongDungRef)}
-                          onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
