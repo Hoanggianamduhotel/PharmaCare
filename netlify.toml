@@ -1,6 +1,6 @@
 [build]
   publish = "dist/public"
-  command = "vite build"
+  command = "npm install && npx vite build --config vite.config.prod.ts"
 
 [[redirects]]
   from = "/*"

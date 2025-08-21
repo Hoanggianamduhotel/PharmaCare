@@ -2,12 +2,14 @@
 
 This is a Vietnamese pharmacy management system built with React, Express, and Supabase PostgreSQL. The application provides comprehensive functionality for managing medicine inventory, prescriptions, and patient records. It features a modern UI with Shadcn/UI components, TanStack Query for data fetching, and real-time prescription processing capabilities.
 
-## Recent Changes (Aug 20, 2025)
+## Recent Changes (Aug 20-21, 2025)
 - ✅ Successfully migrated to real Supabase database with table `thuoc`
 - ✅ Fixed medicine creation logic - can now add new medicines via API and UI
 - ✅ Updated schema to match SQL table structure (numeric fields for pricing)
 - ✅ Improved table UI with soft gray colors and full-width layout
 - ✅ Dual API support: Vietnamese `/api/thuoc` and legacy `/api/medicines` routes
+- ✅ Fixed empty form inputs - number fields now start empty instead of default 0
+- ✅ Solved Netlify deployment issues with production Vite config and proper dependencies
 
 # User Preferences
 
