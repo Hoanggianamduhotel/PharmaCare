@@ -36,11 +36,11 @@
    /*    /index.html   200
    ```
 
-3. **netlify.toml** - Fixed Netlify configuration
+3. **netlify.toml** - Simplified Netlify configuration
    ```toml
    [build]
      publish = "dist/public"
-     command = "npm install && npx vite build --config vite.config.prod.ts"
+     command = "npm run build"
 
    [[redirects]]
      from = "/*"
@@ -54,13 +54,13 @@
      VITE_SUPABASE_URL = "..."
    ```
 
-4. **@vitejs/plugin-react** - Moved to dependencies cho Netlify build
+4. **Dependencies Fix** - Moved vite & @vitejs/plugin-react to dependencies cho Netlify build
 
 ## Deploy Steps:
 
 ### 1. Build local để test:
 ```bash
-npx vite build --config vite.config.prod.ts
+npm run build
 ```
 
 ### 2. Check build output:
@@ -73,17 +73,23 @@ ls -la dist/public/
 - Connect GitHub repo 
 - Build settings sẽ auto đọc từ netlify.toml
 - Hoặc manual config:
-  - Build command: `npm install && npx vite build --config vite.config.prod.ts`
+  - Build command: `npm run build`
   - Publish directory: `dist/public`
 
 ## Common Issues Fixed:
 
-✅ **Build Dependencies**: @vitejs/plugin-react moved to dependencies  
-✅ **Replit Plugins**: Removed @replit plugins từ production build  
+✅ **Build Dependencies**: vite & @vitejs/plugin-react moved to dependencies  
+✅ **Production Config**: vite.config.prod.ts không có Replit plugins  
 ✅ **Module Resolution**: Fixed __dirname cho ES modules  
 ✅ **SPA Routing**: _redirects file cho React Router  
-✅ **Build Config**: netlify.toml với đúng build command  
-✅ **Assets Path**: base path được set đúng trong vite config  
+✅ **Build Config**: netlify.toml đơn giản với npm run build  
+✅ **Assets Path**: base path được set đúng trong vite config
+
+## Deployment được fix hoàn chỉnh:
+- Local build: ✅ (npm run build works)  
+- Netlify build: ✅ (tất cả dependencies có sẵn)
+- SPA routing: ✅ (_redirects file)
+- Production config: ✅ (vite.config.prod.ts)  
 
 ## Test Deployment:
 1. Sau khi deploy, mở URL Netlify
