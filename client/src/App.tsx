@@ -5,8 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import NotFound from "@/pages/not-found";
-import PharmacyPage from "@/pages/demo";
-import React from "react";
+import PharmacyPage from "@/pages/pharmacy";
 
 function Router() {
   return (

@@ -1,8 +1,6 @@
 # Deployment Guide - PharmaCare
 
-## Netlify Static Hosting (chỉ frontend)
-
-**Lưu ý quan trọng:** Netlify chỉ host static files, không chạy Node.js server. Chỉ build frontend React app.
+## Fix Netlify Build & Blank Page Issues
 
 ### Files đã được tạo/sửa để fix deployment:
 
@@ -38,11 +36,11 @@
    /*    /index.html   200
    ```
 
-3. **netlify.toml** - Netlify static hosting configuration  
+3. **netlify.toml** - Fixed Netlify configuration với npx
    ```toml
    [build]
-     command = "npm run build"
-     publish = "dist"
+     publish = "dist/public"
+     command = "npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
 
    [[redirects]]
      from = "/*"
@@ -51,22 +49,23 @@
 
    [build.environment]
      NODE_ENV = "production"
-     VITE_SUPABASE_URL = "..."
+     VITE_API_URL = "/api"
      VITE_SUPABASE_ANON_KEY = "..."
+     VITE_SUPABASE_URL = "..."
    ```
 
-4. **Dependencies Fix** - Moved vite, esbuild, @vitejs/plugin-react to dependencies
+4. **Dependencies Fix** - Moved vite & @vitejs/plugin-react to dependencies cho Netlify build
 
 ## Deploy Steps:
 
 ### 1. Build local để test:
 ```bash
-npm run build
+npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 ```
 
 ### 2. Check build output:
 ```bash
-ls -la dist/
+ls -la dist/public/
 # Phải thấy: index.html, assets/, _redirects
 ```
 
@@ -74,27 +73,23 @@ ls -la dist/
 - Connect GitHub repo 
 - Build settings sẽ auto đọc từ netlify.toml
 - Hoặc manual config:
-  - Build command: `npm run build`
-  - Publish directory: `dist`
+  - Build command: `npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist`
+  - Publish directory: `dist/public`
 
-## Netlify Deployment Strategy:
+## Common Issues Fixed:
 
-**Static Frontend Only** - Netlify không host Node.js server
-- ✅ Build chỉ frontend React app (vite build)
-- ✅ Dependencies: vite & @vitejs/plugin-react trong dependencies  
-- ✅ Production config: vite.config.prod.ts không có Replit plugins
-- ✅ SPA routing: _redirects file cho React Router
+✅ **Build Dependencies**: vite & @vitejs/plugin-react moved to dependencies  
+✅ **Production Config**: vite.config.prod.ts không có Replit plugins  
+✅ **Module Resolution**: Fixed __dirname cho ES modules  
+✅ **SPA Routing**: _redirects file cho React Router  
+✅ **Build Config**: netlify.toml đơn giản với npm run build  
+✅ **Assets Path**: base path được set đúng trong vite config
 
-## Backend Hosting Alternatives:
-- **Replit:** Full-stack development và hosting
-- **Render/Railway:** Node.js server hosting 
-- **Vercel:** Serverless functions + frontend
-
-## Đã fix hoàn chỉnh cho Netlify:
-- Static build: ✅ (chỉ vite build)  
-- Dependencies: ✅ (vite trong dependencies)
+## Deployment được fix hoàn chỉnh:
+- Local build: ✅ (npx commands work)  
+- Netlify build: ✅ (npx đảm bảo tools được tìm thấy)
 - SPA routing: ✅ (_redirects file)
-- No server build: ✅ (bỏ esbuild khỏi Netlify)  
+- Production config: ✅ (vite.config.prod.ts)  
 
 ## Test Deployment:
 1. Sau khi deploy, mở URL Netlify

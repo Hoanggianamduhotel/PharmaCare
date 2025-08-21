@@ -1,15 +1,11 @@
 [build]
-  command = "npm run build"
-  publish = "dist"
+  publish = "dist/public"
+  command = "npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[build.environment]
-  NODE_ENV = "production"
-  VITE_API_URL = "/api"
 
 [build.environment]
   NODE_ENV = "production"

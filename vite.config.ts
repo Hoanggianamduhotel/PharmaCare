@@ -18,13 +18,14 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
+      "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
   },
+  root: path.resolve(import.meta.dirname, "client"),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist"),
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
   server: {
@@ -32,12 +33,5 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
-    port: 5000,
-    host: true, // cho phép external access (0.0.0.0)
-    allowedHosts: [
-      "localhost",
-      "127.0.0.1",
-      "f1730b97-9abd-4ee2-ae47-c9c2abfcd0bd-00-1i9t48hgmni4f.worf.replit.dev"
-    ],
   },
 });
