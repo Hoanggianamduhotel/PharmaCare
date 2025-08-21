@@ -3,12 +3,12 @@
 This is a Vietnamese pharmacy management system built with React, Express, and Supabase PostgreSQL. The application provides comprehensive functionality for managing medicine inventory, prescriptions, and patient records. It features a modern UI with Shadcn/UI components, TanStack Query for data fetching, and real-time prescription processing capabilities.
 
 ## Recent Changes (Aug 21, 2025)
-- ✅ **Architecture Change:** Migrated from full-stack to frontend-only with Supabase direct connection
-- ✅ **Deployment Fix:** Moved vite, @vitejs/plugin-react, typescript to dependencies for Netlify
-- ✅ **Build Script:** Created build-frontend.js for static deployment (no Express server)
-- ✅ **Supabase Integration:** Added direct client hooks and components in client/src/hooks/useThuoc.ts
-- ✅ **Production Ready:** Frontend builds successfully with `npx vite build --config vite.config.prod.ts`
-- ✅ **Netlify Config:** Updated to use custom build command for static hosting only
+- ✅ **Complete Migration:** Successfully moved from Express full-stack to React-only frontend
+- ✅ **Port Configuration:** Dev server now runs on port 5000 with `vite --port 5000`
+- ✅ **Clean Architecture:** Removed server/, shared/ folders, moved client/ content to root
+- ✅ **Package Updates:** All Vite build tools moved to dependencies for Netlify compatibility  
+- ✅ **Supabase Integration:** Direct database access with hooks in src/hooks/useThuoc.ts
+- ✅ **Netlify Ready:** Custom build script targeting dist/public/ directory
 
 # User Preferences
 
