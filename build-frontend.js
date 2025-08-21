@@ -26,7 +26,7 @@ try {
   console.log('📁 Files ready in dist/public/ directory for Netlify');
   
   // List generated files
-  execSync('ls -la dist/public/', { stdio: 'inherit' });
+  execSync('ls -la dist/', { stdio: 'inherit' });
   
 } catch (error) {
   console.error('❌ Build failed:', error.message);

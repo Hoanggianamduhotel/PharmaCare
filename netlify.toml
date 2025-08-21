@@ -1,6 +1,6 @@
 [build]
-  command = "node build-frontend.js"
-  publish = "dist/public"
+  command = "npm run build"
+  publish = "dist"
 
 [[redirects]]
   from = "/*"
