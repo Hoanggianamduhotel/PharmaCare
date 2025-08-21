@@ -36,11 +36,11 @@
    /*    /index.html   200
    ```
 
-3. **netlify.toml** - Simple and clean Netlify configuration
+3. **netlify.toml** - Final working Netlify configuration
    ```toml
    [build]
      publish = "dist/public"
-     command = "npm run build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
+     command = "npm ci && npx --yes vite@5.4.19 build --config vite.config.prod.ts && npx --yes esbuild@0.25.0 server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
 
    [[redirects]]
      from = "/*"
@@ -60,7 +60,7 @@
 
 ### 1. Build local để test:
 ```bash
-npm run build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+npx --yes vite@5.4.19 build --config vite.config.prod.ts && npx --yes esbuild@0.25.0 server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 ```
 
 ### 2. Check build output:
@@ -73,7 +73,7 @@ ls -la dist/public/
 - Connect GitHub repo 
 - Build settings sẽ auto đọc từ netlify.toml
 - Hoặc manual config:
-  - Build command: `npm run build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist`
+  - Build command: `npm ci && npx --yes vite@5.4.19 build --config vite.config.prod.ts && npx --yes esbuild@0.25.0 server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist`
   - Publish directory: `dist/public`
 
 ## Common Issues Fixed:
@@ -86,18 +86,18 @@ ls -la dist/public/
 ✅ **Assets Path**: base path được set đúng trong vite config
 
 ## Deployment được fix hoàn chỉnh:
-- Local build: ✅ (npm run build + npx esbuild)  
-- Netlify build: ✅ (npm scripts resolve tools automatically)
+- Local build: ✅ (npx với explicit versions)  
+- Netlify build: ✅ (npm ci + npx --yes đảm bảo reproducible builds)
 - SPA routing: ✅ (_redirects file)
 - Production config: ✅ (vite.config.prod.ts)
-- Simple & clean: ✅ (no hard-coded paths, no version pinning needed)
+- Version control: ✅ (exact versions vite@5.4.19, esbuild@0.25.0)
 
 ## Root Cause Analysis:
-- **Issue**: Sử dụng đường dẫn cứng `./node_modules/.bin/vite` thay vì npm script
-- **Problem**: Netlify không tìm thấy binary files trong node_modules/.bin
-- **Simple Solution**: Dùng `npm run build` - npm script tự động resolve tools
-- **Why it works**: npm scripts có access đến node_modules/.bin trong PATH
-- **Result**: Build thành công với vite từ devDependencies + npx esbuild  
+- **Issue 1**: vite trong devDependencies, Netlify không install trong production
+- **Issue 2**: npx version mismatch (7.1.3 vs 5.4.19)
+- **Solution**: Dùng `npx --yes vite@5.4.19` để force exact version
+- **Final Fix**: `npm ci` + `npx --yes` với explicit versions
+- **Result**: Build thành công với vite v5.4.19 và esbuild v0.25.0  
 
 ## Test Deployment:
 1. Sau khi deploy, mở URL Netlify
