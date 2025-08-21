@@ -24,7 +24,7 @@ export function OrderQuantityDialog({
   onOpenChange,
   medicine,
 }: OrderQuantityDialogProps) {
-  const [quantity, setQuantity] = useState(medicine.so_luong_dat_hang);
+  const [quantity, setQuantity] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -54,7 +54,8 @@ export function OrderQuantityDialog({
   });
 
   const handleSave = () => {
-    updateMutation.mutate(quantity);
+    const numericQuantity = quantity === "" ? 0 : Number(quantity);
+    updateMutation.mutate(numericQuantity);
   };
 
   return (
@@ -75,8 +76,9 @@ export function OrderQuantityDialog({
               id="quantity"
               type="number"
               min="0"
+              placeholder=""
               value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
+              onChange={(e) => setQuantity(e.target.value)}
             />
           </div>
 

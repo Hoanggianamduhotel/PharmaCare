@@ -1,0 +1,65 @@
+5:07:51 PM: Netlify Build                                                 
+5:07:51 PM: ────────────────────────────────────────────────────────────────
+5:07:51 PM: ​
+5:07:51 PM: ❯ Version
+5:07:51 PM:   @netlify/build 35.1.2
+5:07:51 PM: ​
+5:07:51 PM: ❯ Flags
+5:07:51 PM:   accountId: 6895d75ae37cc24ee002d1b7
+5:07:51 PM:   baseRelDir: true
+5:07:51 PM:   buildId: 68a6ee6340edc2a41bdd8765
+5:07:51 PM:   deployId: 68a6ee6340edc2a41bdd8767
+5:07:51 PM: ​
+5:07:51 PM: ❯ Current directory
+5:07:51 PM:   /opt/build/repo
+5:07:51 PM: ​
+5:07:51 PM: ❯ Config file
+5:07:51 PM:   /opt/build/repo/netlify.toml
+5:07:51 PM: ​
+5:07:51 PM: ❯ Context
+5:07:51 PM:   production
+5:07:51 PM: ​
+5:07:51 PM: ❯ Installing extensions
+5:07:51 PM:    - neon
+5:08:16 PM: ​
+5:08:16 PM: ❯ Loading extensions
+5:08:16 PM:    - neon
+5:08:17 PM: ​
+5:08:17 PM: build.command from netlify.toml                               
+5:08:17 PM: ────────────────────────────────────────────────────────────────
+5:08:17 PM: ​
+5:08:17 PM: $ npm run build
+5:08:17 PM: > rest-express@1.0.0 build
+5:08:17 PM: > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+5:08:17 PM: sh: 1: vite: not found
+5:08:17 PM: ​
+5:08:17 PM: "build.command" failed                                        
+5:08:17 PM: ────────────────────────────────────────────────────────────────
+5:08:17 PM: ​
+5:08:17 PM:   Error message
+5:08:17 PM:   Command failed with exit code 127: npm run build (https://ntl.fyi/exit-code-127)
+5:08:17 PM: ​
+5:08:17 PM:   Error location
+5:08:17 PM:   In build.command from netlify.toml:
+5:08:17 PM:   npm run build
+5:08:17 PM: ​
+5:08:17 PM:   Resolved config
+5:08:17 PM:   build:
+5:08:17 PM:     command: npm run build
+5:08:17 PM:     commandOrigin: config
+5:08:17 PM:     environment:
+5:08:17 PM:       - VITE_SUPABASE_ANON_KEY
+5:08:17 PM:       - VITE_SUPABASE_URL
+5:08:17 PM:       - NODE_ENV
+5:08:17 PM:       - VITE_API_URL
+5:08:17 PM:     publish: /opt/build/repo/dist/public
+5:08:17 PM:     publishOrigin: config
+5:08:17 PM:   redirects:
+5:08:17 PM: Failed during stage 'building site': Build script returned non-zero exit code: 2 (https://ntl.fyi/exit-code-2)
+5:08:17 PM:     - from: /*
+      status: 200
+      to: /index.html
+  redirectsOrigin: config
+5:08:17 PM: Build failed due to a user error: Build script returned non-zero exit code: 2
+5:08:17 PM: Failing build: Failed to build site
+5:08:18 PM: Finished processing build request in 41.854s
