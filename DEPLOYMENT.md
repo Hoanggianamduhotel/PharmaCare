@@ -41,8 +41,8 @@
 3. **netlify.toml** - Netlify static hosting configuration  
    ```toml
    [build]
-     publish = "dist/public"
-     command = "vite build --config vite.config.prod.ts"
+     command = "npm run build"
+     publish = "dist"
 
    [[redirects]]
      from = "/*"
@@ -61,7 +61,7 @@
 
 ### 1. Build local để test:
 ```bash
-vite build
+npm run build
 ```
 
 ### 2. Check build output:
@@ -74,7 +74,7 @@ ls -la dist/
 - Connect GitHub repo 
 - Build settings sẽ auto đọc từ netlify.toml
 - Hoặc manual config:
-  - Build command: `vite build`
+  - Build command: `npm run build`
   - Publish directory: `dist`
 
 ## Netlify Deployment Strategy:
