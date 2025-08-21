@@ -10,6 +10,7 @@ This is a Vietnamese pharmacy management system built with React, Express, and S
 - ✅ Dual API support: Vietnamese `/api/thuoc` and legacy `/api/medicines` routes
 - ✅ Fixed empty form inputs - number fields now start empty instead of default 0
 - ✅ Solved Netlify deployment issues with production Vite config and proper dependencies
+- ✅ Updated Netlify config for static hosting only (không build server)
 
 # User Preferences
 

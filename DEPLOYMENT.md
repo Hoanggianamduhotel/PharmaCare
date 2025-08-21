@@ -61,12 +61,12 @@
 
 ### 1. Build local để test:
 ```bash
-vite build --config vite.config.prod.ts
+vite build
 ```
 
 ### 2. Check build output:
 ```bash
-ls -la dist/public/
+ls -la dist/
 # Phải thấy: index.html, assets/, _redirects
 ```
 
@@ -74,8 +74,8 @@ ls -la dist/public/
 - Connect GitHub repo 
 - Build settings sẽ auto đọc từ netlify.toml
 - Hoặc manual config:
-  - Build command: `vite build --config vite.config.prod.ts`
-  - Publish directory: `dist/public`
+  - Build command: `vite build`
+  - Publish directory: `dist`
 
 ## Netlify Deployment Strategy:
 
