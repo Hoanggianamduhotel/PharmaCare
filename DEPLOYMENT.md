@@ -36,11 +36,11 @@
    /*    /index.html   200
    ```
 
-3. **netlify.toml** - Final working Netlify configuration
+3. **netlify.toml** - Fixed Netlify configuration với npx
    ```toml
    [build]
      publish = "dist/public"
-     command = "npm ci && npx --yes vite@5.4.19 build --config vite.config.prod.ts && npx --yes esbuild@0.25.0 server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
+     command = "npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
 
    [[redirects]]
      from = "/*"
@@ -60,7 +60,7 @@
 
 ### 1. Build local để test:
 ```bash
-npx --yes vite@5.4.19 build --config vite.config.prod.ts && npx --yes esbuild@0.25.0 server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 ```
 
 ### 2. Check build output:
@@ -73,7 +73,7 @@ ls -la dist/public/
 - Connect GitHub repo 
 - Build settings sẽ auto đọc từ netlify.toml
 - Hoặc manual config:
-  - Build command: `npm ci && npx --yes vite@5.4.19 build --config vite.config.prod.ts && npx --yes esbuild@0.25.0 server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist`
+  - Build command: `npx vite build --config vite.config.prod.ts && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist`
   - Publish directory: `dist/public`
 
 ## Common Issues Fixed:
@@ -82,22 +82,14 @@ ls -la dist/public/
 ✅ **Production Config**: vite.config.prod.ts không có Replit plugins  
 ✅ **Module Resolution**: Fixed __dirname cho ES modules  
 ✅ **SPA Routing**: _redirects file cho React Router  
-✅ **Build Config**: netlify.toml với node_modules/.bin paths  
+✅ **Build Config**: netlify.toml đơn giản với npm run build  
 ✅ **Assets Path**: base path được set đúng trong vite config
 
 ## Deployment được fix hoàn chỉnh:
-- Local build: ✅ (npx với explicit versions)  
-- Netlify build: ✅ (npm ci + npx --yes đảm bảo reproducible builds)
+- Local build: ✅ (npx commands work)  
+- Netlify build: ✅ (npx đảm bảo tools được tìm thấy)
 - SPA routing: ✅ (_redirects file)
-- Production config: ✅ (vite.config.prod.ts)
-- Version control: ✅ (exact versions vite@5.4.19, esbuild@0.25.0)
-
-## Root Cause Analysis:
-- **Issue 1**: vite trong devDependencies, Netlify không install trong production
-- **Issue 2**: npx version mismatch (7.1.3 vs 5.4.19)
-- **Solution**: Dùng `npx --yes vite@5.4.19` để force exact version
-- **Final Fix**: `npm ci` + `npx --yes` với explicit versions
-- **Result**: Build thành công với vite v5.4.19 và esbuild v0.25.0  
+- Production config: ✅ (vite.config.prod.ts)  
 
 ## Test Deployment:
 1. Sau khi deploy, mở URL Netlify
